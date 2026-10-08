@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Runtime cache
+/.cache/
+
+# TypeScript Compiled Files
+*.ts
+*.js.map
+
+# Build outputs
+dist/
+build/
+
+# Coverage directory used by tools like Jest or Istanbul
+coverage/
+
+# IDE / Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.suo
+
+# OS-generated files
+.DS_Store
+.DS_Resource_Fork
+.Spotlight-V100
+.LocaleDetect
+
+# Package manager lock files (use one)
+# package-lock.json (for npm)
+# yarn.lock (for yarn)
+# pnpm-lock.yaml (for pnpm)
+
+# Prisma schema generated client
+./prisma/client/
+
+# Uploads directory
+./src/uploads/
