@@ -1,0 +1,466 @@
+/* Estilos do app logado: barra lateral + telas.
+   As cores principais vêm das variáveis definidas em login.css (:root),
+   então mudar as cores lá muda o app inteiro. Aqui só entram as extras. */
+
+:root {
+  --surface-2: #ececec; /* fundos neutros: trilhos de barras, ícones, hover */
+  --nav-active-bg: #f1f1f1; /* item selecionado do menu */
+  --nav-active-text: #111111;
+}
+
+:root[data-contrast="high"] {
+  --surface-2: #333333;
+  --nav-active-bg: var(--primary);
+  --nav-active-text: var(--primary-text);
+}
+
+/* ---------- Estrutura ---------- */
+.app {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100vh;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.main {
+  min-width: 0;
+  padding: 28px 32px 48px;
+}
+
+/* ---------- Barra lateral ---------- */
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: 100vh;
+  padding: 20px 16px;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+}
+
+.brand {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-left: 4px;
+  font-weight: 700;
+  color: var(--primary-text);
+  background: var(--primary);
+  border-radius: 8px;
+}
+
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 0 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.nav-link:hover {
+  background: var(--surface-2);
+}
+
+.nav-link.active {
+  font-weight: 700;
+  color: var(--nav-active-text);
+  background: var(--nav-active-bg);
+}
+
+.sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar .contrast-switch {
+  position: static;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary-text);
+  background: var(--primary);
+  border-radius: 50%;
+}
+
+.user-name {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.user-role {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* ---------- Cabeçalho da página e botões ---------- */
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 1.7rem;
+}
+
+.page-subtitle {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  color: var(--primary-text);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+/* ---------- Cards ---------- */
+.card {
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stat-title {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.stat-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.stat-value {
+  font-size: 1.9rem;
+  line-height: 1.1;
+}
+
+.stat-detail {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.meter {
+  height: 8px;
+  margin-top: 6px;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-radius: 999px;
+}
+
+.meter > span {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+}
+
+/* ---------- Painéis do dashboard ---------- */
+.panels {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.panel-title {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+}
+
+/* Gráfico de barras: progresso % por obra */
+.bars {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 14px;
+  height: 280px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.bar-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.bar-track {
+  position: relative;
+  flex: 1;
+  width: min(100%, 56px);
+  overflow: hidden;
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.bar-fill {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--primary);
+}
+
+.bar-label {
+  min-height: 2.4em;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+}
+
+/* Atividades recentes */
+.activities {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activity {
+  display: flex;
+  gap: 12px;
+}
+
+.activity-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.activity p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.activity small {
+  color: var(--muted);
+}
+
+/* ---------- Estados: vazio, erro, carregando ---------- */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.state p {
+  margin: 0;
+}
+
+.state-error p {
+  font-weight: 600;
+  color: var(--error);
+}
+
+.skeleton {
+  background: var(--surface-2);
+  border-radius: 12px;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skeleton-stat {
+  height: 120px;
+}
+
+.skeleton-panel {
+  height: 340px;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 900px) {
+  .panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 800px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    gap: 12px;
+    height: auto;
+    padding: 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-list {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .nav-link {
+    white-space: nowrap;
+  }
+
+  .sidebar-footer {
+    flex-flow: row wrap;
+    align-items: center;
+    margin-top: 0;
+  }
+
+  .sidebar .contrast-switch {
+    width: auto;
+  }
+
+  .main {
+    padding: 20px 16px 40px;
+  }
+
+  .bars {
+    gap: 8px;
+  }
+}
+
+/* ---------- Impressão ("Exportar") ---------- */
+@media print {
+  .app {
+    display: block;
+  }
+
+  .sidebar,
+  .page-actions {
+    display: none;
+  }
+
+  .main {
+    padding: 0;
+  }
+}
