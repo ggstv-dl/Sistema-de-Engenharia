@@ -1,0 +1,279 @@
+/* Tokens no estilo do protótipo: fundo claro, preto e branco, cantos suaves */
+:root {
+  --bg: #fafafa;
+  --card: #ffffff;
+  --text: #111111;
+  --muted: #525252;
+  --primary: #111111;
+  --primary-text: #ffffff;
+  --border: #bab9b9;
+  --border-input: #939292;
+  --error: #b3261e;
+  --error-bg: #fdecea;
+  --focus: #70b2b9;
+  --tab-bg: #f1f1f1;
+  --tab-active-bg: #ffffff;
+  --tab-active-text: #111111;
+  --track-off: #d4d4d4;
+}
+
+/* Alto contraste: preto/branco/amarelo, legível sob sol forte */
+:root[data-contrast="high"] {
+  --bg: #000000;
+  --card: #000000;
+  --text: #ffffff;
+  --muted: #ffffff;
+  --primary: #ffffff;
+  --primary-text: #000000;
+  --border: #ffffff;
+  --border-input: #ffffff;
+  --error: #ff8a80;
+  --error-bg: #000000;
+  --focus: #70b2b9;
+  --tab-bg: #000000;
+  --tab-active-bg: #fbfbf7;
+  --tab-active-text: #000000;
+  --track-off: #fbf6f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* Interruptor de alto contraste */
+.contrast-switch {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 10px 0 16px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.switch-track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--track-off);
+  border-radius: 999px;
+  transition: background 0.15s;
+}
+
+.switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s, background 0.15s;
+}
+
+.contrast-switch[aria-checked="true"] .switch-track {
+  background: var(--primary);
+}
+
+.contrast-switch[aria-checked="true"] .switch-knob {
+  transform: translateX(20px);
+  background: var(--primary-text);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 32px 28px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 20px;
+  font-weight: 700;
+  color: var(--primary-text);
+  background: var(--primary);
+  border-radius: 8px;
+}
+
+/* Abas Entrar / Criar conta */
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 22px;
+  background: var(--tab-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.tab {
+  min-height: 44px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.tab[aria-selected="true"] {
+  color: var(--tab-active-text);
+  background: var(--tab-active-bg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+h1 {
+  margin: 0 0 4px;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+}
+
+label {
+  margin-bottom: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 14px;
+  font-size: 1.05rem;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+}
+
+input::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+input[aria-invalid="true"] {
+  border-color: var(--error);
+  border-width: 2px;
+}
+
+.password-wrap {
+  position: relative;
+}
+
+.password-wrap input {
+  padding-right: 96px;
+}
+
+.show-password {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  height: 40px;
+  padding: 0 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border-input);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.error {
+  margin-top: 6px;
+  color: var(--error);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.server-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  color: var(--error);
+  background: var(--error-bg);
+  border: 1px solid var(--error);
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.submit {
+  width: 100%;
+  min-height: 54px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-text);
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+input:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .contrast-switch {
+    position: static;
+    margin: 0 auto 12px;
+  }
+
+  .login-page {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: 24px;
+  }
+}
