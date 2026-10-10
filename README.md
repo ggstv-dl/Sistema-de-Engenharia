@@ -1,199 +1,217 @@
-# CRM Engineer Civil - API Back-end
+# CRM Engenheiro Civil
+## Equipe do Projeto
 
-## Descrição
+- Gustavo Barros Martins
+- Hugo Alexandre Carvalho Coelho Coutinho
+- Jeferson Machado dos Santos
+- Maicon de Sousa Pontes
 
-Esta é uma API REST back-end desenvolvida para um CRM voltado a **Engenheiros Civis Autônomos**. O sistema oferece suporte a:
+**API REST para gerenciamento de clientes e projetos de engenharia civil**
 
-- **Diário de Obra offline-first**: Sincronização de dados coletados offline diretamente no campo
-- **Gestão de projetos**: Controle e organização de projetos de engenharia civil
-- **Geração de PDFs**: Criação automatizada de orçamentos e relatórios técnicos
-- **Integração com WhatsApp**: Envio automático de documentos e orçamentos via WhatsApp
+## 1. Sobre o Projeto
 
-A API foi construída com **Node.js**, **Express** e **TypeScript**, seguindo boas práticas de desenvolvimento software arquitetural limpa e escalável.
+O CRM Engineer Civil é uma solução de software desenvolvida para auxiliar engenheiros civis autônomos na organização e no gerenciamento de suas atividades profissionais. A rotina desses profissionais envolve o acompanhamento de diferentes projetos e obras, o registro de informações em campo, a organização de documentos técnicos, a elaboração de orçamentos e a comunicação constante com os clientes. Quando essas atividades são realizadas de forma descentralizada ou dependem de processos manuais, podem dificultar o acesso às informações, o acompanhamento das obras e a gestão eficiente dos projetos.
 
-## Pré-requisitos
+Diante desse cenário, o projeto propõe o desenvolvimento de uma API REST back-end capaz de centralizar e facilitar esses processos, oferecendo recursos para gerenciamento de projetos, sincronização de dados do Diário de Obra, organização e versionamento de arquivos, geração automatizada de orçamentos e relatórios técnicos em PDF e integração com o WhatsApp para o envio de documentos aos clientes.
+## 2. Objetivos do Projeto
 
-Antes de começar, certifique-se de ter instalado em sua máquina:
+- Centralizar informações de clientes e projetos de engenharia civil.
+- Facilitar o registro e o acompanhamento das atividades realizadas nas obras.
+- Permitir a sincronização de informações registradas sem conexão com a internet.
+- Organizar arquivos e documentos relacionados aos projetos.
+- Automatizar a geração de orçamentos e relatórios técnicos em PDF.
+- Facilitar o envio de documentos e orçamentos por meio da integração com o WhatsApp.
 
-- [Node.js](https://nodejs.org/) (versão 18 ou superior)
-- [npm](https://www.npmjs.com/) (geralmente vem com o Node.js)
-- [PostgreSQL](https://www.postgresql.org/) (banco de dados relacional)
-- [Git](https://git-scm.com/) para controle de versão
+## 3. Principais Funcionalidades
 
-## Instalação
+### 3.1. Diário de Obra (RDO)
 
-Siga os passos abaixo para clonar o repositório e configurar o projeto:
+Registro e sincronização de informações do Diário de Obra, permitindo que dados coletados em campo sejam enviados à API quando houver conexão com a internet.
+
+### 3.2. Gestão de Projetos
+
+Organização e acompanhamento de projetos de engenharia civil, com suporte ao gerenciamento das informações e dos documentos associados a cada projeto.
+
+### 3.3. Gestão de Arquivos
+
+Envio e organização de arquivos vinculados aos projetos, incluindo documentos PDF, desenhos DWG e outros formatos pertinentes, com possibilidade de controle de versões.
+
+### 3.4. Geração de Documentos em PDF
+
+Geração automatizada de orçamentos e relatórios técnicos para facilitar a elaboração e o compartilhamento de documentos profissionais.
+
+### 3.5. Integração com WhatsApp
+
+Integração planejada para facilitar o envio de orçamentos e documentos aos clientes por meio do WhatsApp, conforme a configuração do serviço utilizado.
+
+## 4. Tecnologias Utilizadas
+
+| Tecnologia | Finalidade |
+|---|---|
+| Node.js | Ambiente de execução JavaScript |
+| TypeScript | Tipagem estática e organização do código |
+| Express | Desenvolvimento da API REST |
+| PostgreSQL | Banco de dados relacional |
+| Prisma | Acesso e gerenciamento do banco de dados |
+| JWT | Autenticação baseada em tokens |
+| Bcryptjs | Hash de senhas |
+| Multer | Recebimento de arquivos |
+| PDFKit | Geração de documentos PDF |
+| Dotenv | Gerenciamento de variáveis de ambiente |
+| CORS | Controle de requisições entre diferentes origens |
+| Nodemon | Reinicialização automática durante o desenvolvimento |
+
+## 5. Requisitos para Execução
+
+Antes de executar o projeto, verifique se os seguintes recursos estão instalados:
+
+- Node.js versão 18 ou superior.
+- npm, instalado junto ao Node.js.
+- PostgreSQL.
+- Git.
+
+## 6. Instalação
+
+Clone o repositório e acesse o diretório do projeto:
 
 ```bash
-# 1. Clone o repositório
-git clone https://seu-usuario/crm-engineer-civil.git
-
-# 2. Acesse o diretório do projeto
+git clone <URL_DO_REPOSITORIO>
 cd crm-engineer-civil
+```
 
-# 3. Instale as dependências
+Instale as dependências:
+
+```bash
 npm install
 ```
 
-## Configuração de Ambiente
+Configure as variáveis de ambiente conforme a próxima seção.
 
-1. **Copie o arquivo .env.example**:
+## 7. Configuração do Ambiente
+
+Crie um arquivo `.env` com base no arquivo `.env.example`, caso ele esteja disponível:
 
 ```bash
 cp .env.example .env
 ```
 
-2. **Configure as variáveis de ambiente** no arquivo `.env`:
+Configure as variáveis necessárias:
 
 ```env
-# Porta do servidor
 PORT=3000
-
-# URL de conexão com o PostgreSQL
-DATABASE_URL="postgresql://localhost:5432/crm_engineer_civil?schema=public"
-
-# Segredo para JWT (JWT_SECRET deve ser uma string longa e aleatória)
-JWT_SECRET=sua-chave-secreta-aqui
-
-# Tempo de expiração do JWT (em horas ou dias)
+DATABASE_URL="postgresql://USUARIO:SENHA@localhost:5432/crm_engineer_civil?schema=public"
+JWT_SECRET="SUA_CHAVE_SECRETA"
 JWT_EXPIRES_IN=24h
-
-# Chave da API do WhatsApp (opcional, para envio de orçamentos)
-WHATSAPP_API_KEY=sua-chave-api-whatsapp
-
-# Número de WhatsApp remetente (formato internacional sem +)
-WHATSAPP_FROM_NUMBER=+5511999999999
+WHATSAPP_API_KEY="SUA_CHAVE_API"
+WHATSAPP_FROM_NUMBER="NUMERO_CONFIGURADO_NO_SERVICO"
 ```
 
-## Execução
+**Importante:** substitua os valores de exemplo pelas configurações reais do ambiente. Não compartilhe credenciais e nunca envie o arquivo `.env` ao repositório.
 
-### Modo Desenvolvimento
+A variável `WHATSAPP_API_KEY` e as configurações relacionadas ao WhatsApp dependem do provedor de integração escolhido.
+
+Caso o projeto utilize Prisma, execute também os comandos de preparação do banco de dados previstos na configuração real do projeto.
+
+## 8. Execução
+
+### Desenvolvimento
 
 ```bash
-# Inicia o servidor com hot-reload usando Nodemon
 npm run dev
 ```
 
-### Modo Produção
+### Compilação para produção
 
 ```bash
-# Build TypeScript para JavaScript
 npm run build
+```
 
-# Inicia o servidor em produção
+### Produção
+
+```bash
 npm start
 ```
 
-O servidor estará disponível em `http://localhost:3000` por padrão.
+Os comandos acima pressupõem que os scripts correspondentes estejam configurados no `package.json`.
 
-## Utilização (Endpoints da API)
+Por padrão, considerando `PORT=3000`, a API estará disponível em:
 
-Abaixo estão os principais endpoints disponíveis para teste e desenvolvimento:
+`http://localhost:3000`
+
+## 9. Endpoints da API
+
+Os endpoints abaixo representam as rotas descritas na proposta atual e devem ser confirmados no código-fonte.
 
 | Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `GET` | `/` | Status da API - retorna mensagem de saúde |
-| `POST` | `/api/rdo/sync` | Sincronização do Diário de Obra (recebe dados offline) |
-| `POST` | `/api/projetos/:id/arquivos` | Upload e versionamento de arquivos (PDF, DWG, etc.) do projeto |
-| `POST` | `/api/whatsapp/enviar-orcamento` | Geração de PDF e envio via WhatsApp do orçamento |
+|---|---|---|
+| GET | `/` | Verificação de disponibilidade da API |
+| POST | `/api/rdo/sync` | Sincronização de registros do Diário de Obra |
+| POST | `/api/projetos/:id/arquivos` | Envio de arquivos vinculados a um projeto |
+| POST | `/api/whatsapp/enviar-orcamento` | Solicitação de geração e envio de orçamento por WhatsApp |
 
-### Exemplos de Requisições
+## 10. Exemplos de Requisições
 
-#### 1. Status da API
+### 10.1. Verificar a API
 
 ```bash
-curl -X GET http://localhost:3000/
+curl http://localhost:3000/
 ```
 
-```json
-Response: {"mensagem": "A API do CRM para Engenharia Civil está a funcionar perfeitamente! 🚀"}
-```
-
-#### 2. Sincronização do Diário de Obra
+### 10.2. Sincronizar o Diário de Obra
 
 ```bash
 curl -X POST http://localhost:3000/api/rdo/sync \
   -H "Content-Type: application/json" \
-  -d {
+  -d '{
     "obraId": "123",
     "data": "2024-01-15",
     "anotacoes": "Fundação executada com sucesso"
-  }
+  }'
 ```
 
-```json
-Response: {"mensagem": "Sincronização concluída com sucesso!"}
-```
-
-#### 3. Upload de Arquivos
+### 10.3. Enviar um arquivo para um projeto
 
 ```bash
 curl -X POST http://localhost:3000/api/projetos/42/arquivos \
-  -H "Content-Type: multipart/form-data" \
   -F "arquivo=@caminho/do/arquivo.pdf"
 ```
 
-```json
-Response: {"mensagem": "Nova versão do ficheiro guardada no repositório."}
-```
-
-#### 4. Geração de PDF e Envio via WhatsApp
+### 10.4. Solicitar orçamento via WhatsApp
 
 ```bash
 curl -X POST http://localhost:3000/api/whatsapp/enviar-orcamento \
   -H "Content-Type: application/json" \
-  -d {
+  -d '{
     "clienteId": "cliente-001",
     "orcamentoId": "orc-2024-001"
-  }
+  }'
 ```
 
-```json
-Response: {"mensagem": "PDF gerado e enviado para o WhatsApp do cliente!"}
-```
+Os corpos das requisições e as respostas esperadas devem ser ajustados conforme a implementação efetiva da API.
 
-## Tecnologias Utilizadas
+## 11. Estrutura do Projeto
 
-- **Node.js** - Ambiente de execução JavaScript
-- **Express** - Framework web para API REST
-- **CORS** - Middleware para permitir requisições cross-origin
-- **Dotenv** - Gerenciamento de variáveis de ambiente
-- **Nodemon** - Reinicialização do servidor durante desenvolvimento
-- **PostgreSQL** - Banco de dados relacional
-- **Prisma** - ORM para banco de dados (configurado no projeto)
-- **Multer** - Middleware para upload de arquivos
-- **PDFKit** - Geração de PDFs no Node.js
-- **Bcryptjs** - Hash de senhas
-- **Jsonwebtoken** - Autenticação via JWT
+A estrutura abaixo é uma referência inicial, baseada na organização apresentada na documentação. Ela deve ser atualizada para refletir os arquivos realmente existentes no repositório.
 
-## Scripts Disponíveis
-
-| Script | Descrição |
-|--------|-----------|
-| `npm run dev` | Inicia o servidor em modo desenvolvimento com Nodemon |
-| `npm start` | Inicia o servidor em modo produção |
-| `npm build` | Compila o TypeScript para JavaScript |
-
-## Estrutura do Projeto
-
-```
+```text
 crm-engineer-civil/
-├── .env              # Variáveis de ambiente (nunca commitar!)
-├── .gitignore        # Arquivo de exclusão do Git
-├── package.json      # Dependências e scripts
-├── package-lock.json # Lock file do npm
 ├── prisma/
-│   └── schema.prisma # Esquema do banco de dados
+│   └── schema.prisma
 ├── src/
-│   ├── app.ts        # Configuração do Express
-│   ├── server.js     # Ponto de entrada do servidor
-│   ├── routes.ts     # Rotas da API
-│   ├── controllers/  # Controladores de lógica
-│   │   ├── fileUpload.ts
-│   │   └── rdoSync.ts
-│   ├── services/     # Serviços de negócio
-│   │   └── whatsappPdf.ts
-│   └── middleware/   # Middlewares customizados
-│       └── auth.ts
-└── README.md         # Documentação do projeto
+│   ├── app.ts
+│   ├── server.ts
+│   ├── routes.ts
+│   ├── controllers/
+│   ├── services/
+│   └── middleware/
+├── .env.example
+├── .gitignore
+├── package.json
+├── package-lock.json
+└── README.md
 ```
+
+
+## 12. Considerações Finais
+
+O CRM Engineer Civil tem como objetivo contribuir para a organização e a digitalização das atividades de engenheiros civis autônomos, integrando recursos de gerenciamento de projetos, registro de informações de campo e geração de documentos em uma API preparada para evoluir conforme as necessidades do sistema.
