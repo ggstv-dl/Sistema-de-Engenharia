@@ -11,16 +11,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bcrypt": "^5.3.1",
+    "@prisma/client": "^6.19.3",
+    "bcrypt": "6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "express-async-errors": "^3.1.1",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "pg": "^8.23.1",
-    "prisma": "^8.0.0-rc.21",
-    "express-async-errors": "^1.2.0"
+    "prisma": "^6.19.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
