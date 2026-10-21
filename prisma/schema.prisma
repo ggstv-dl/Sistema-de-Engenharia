@@ -1,7 +1,7 @@
 /// Database Schema for CRM Engineer Civil
 
 generator client {
-  provider = "postgresql"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -48,7 +48,7 @@ model Projeto {
   atualizadoEm DateTime @updatedAt
 
   // Relations
-  cliente     Cliente?     @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  cliente Cliente @relation(fields: [clienteId], references: [id], onDelete: Restrict)
   engenheiro  Engenheiro?  @relation(fields: [engenheiroId], references: [id], onDelete: SetNull)
   arquivos    Arquivo[]
   medicoes    Medicao[]
@@ -64,7 +64,7 @@ model DiarioObra {
   fotos        String[] // URLs or paths to photos
   observacoes  String?
   projetoId    String
-  engenheiroId String
+  engenheiroId String?
   criadoEm     DateTime @default(now())
 
   // Relations
