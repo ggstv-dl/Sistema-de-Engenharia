@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDashboard } from "../services/dashboardService";
@@ -19,7 +20,7 @@ const moeda = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 1,
 });
 
-const doisDigitos = (n) => String(n).padStart(2, "0");
+const doisDigitos = (n) => String(n ?? 0).padStart(2, "0");
 
 const ICONES = {
   diario: IconCheck,
@@ -49,22 +50,29 @@ function StatCard({ titulo, valor, detalhe, icone: Icone, children }) {
 function ProgressChart({ obras }) {
   return (
     <ul className="bars" aria-label="Progresso por obra">
-      {obras.map((obra) => (
-        <li
-          key={obra.nome}
-          className="bar"
-          aria-label={`${obra.nome}: ${obra.progresso}%`}
-        >
-          <span className="bar-value">{obra.progresso}%</span>
-          <span className="bar-track">
-            <span
-              className="bar-fill"
-              style={{ height: `${obra.progresso}%` }}
-            />
-          </span>
-          <span className="bar-label">{obra.nome}</span>
-        </li>
-      ))}
+      {obras.map((obra) => {
+        const progresso = Math.min(
+          100,
+          Math.max(0, Number(obra.progresso) || 0)
+        );
+
+        return (
+          <li
+            key={obra.id ?? obra.nome}
+            className="bar"
+            aria-label={`${obra.nome}: ${progresso}%`}
+          >
+            <span className="bar-value">{progresso}%</span>
+            <span className="bar-track">
+              <span
+                className="bar-fill"
+                style={{ height: `${progresso}%` }}
+              />
+            </span>
+            <span className="bar-label">{obra.nome}</span>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -72,17 +80,35 @@ function ProgressChart({ obras }) {
 function ActivityList({ atividades }) {
   return (
     <ul className="activities">
-      {atividades.map((a, i) => {
-        const Icone = ICONES[a.tipo] || IconBars;
+      {atividades.map((atividade, i) => {
+        const Icone = ICONES[atividade.tipo] || IconBars;
+
+        // A API retorna datas ISO; formatamos para o horário local.
+        const data = atividade.quando
+          ? new Date(atividade.quando)
+          : null;
+
+        const quando =
+          data && !Number.isNaN(data.getTime())
+            ? data.toLocaleString("pt-BR", {
+                dateStyle: "short",
+                timeStyle: "short",
+              })
+            : atividade.quando || "";
+
         return (
-          <li key={i} className="activity">
+          <li
+            key={atividade.id ?? `${atividade.tipo}-${i}`}
+            className="activity"
+          >
             <span className="activity-icon">
               <Icone size={16} />
             </span>
             <div>
-              <p>{a.texto}</p>
+              <p>{atividade.texto}</p>
               <small>
-                {a.quando} • {a.autor}
+                {quando}
+                {atividade.autor ? ` • ${atividade.autor}` : ""}
               </small>
             </div>
           </li>
@@ -117,8 +143,38 @@ export default function Dashboard() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     setErro("");
+
     try {
-      setDados(await getDashboard());
+      const resultado = await getDashboard();
+
+      // Valores padrão para evitar falhas quando a API retorna campos ausentes.
+      setDados({
+        obrasAtivas: {
+          valor: 0,
+          detalhe: "Projetos em andamento",
+          ...resultado.obrasAtivas,
+        },
+        diariosPendentes: {
+          valor: 0,
+          detalhe: "Total de diários registrados",
+          ...resultado.diariosPendentes,
+        },
+        custoTotal: {
+          valor: 0,
+          detalhe: "Orçamentos do mês",
+          ...resultado.custoTotal,
+        },
+        eficiencia: {
+          valor: null,
+          ...resultado.eficiencia,
+        },
+        progressoObras: Array.isArray(resultado.progressoObras)
+          ? resultado.progressoObras
+          : [],
+        atividades: Array.isArray(resultado.atividades)
+          ? resultado.atividades
+          : [],
+      });
     } catch (err) {
       setErro(err.message || "Não foi possível carregar o painel.");
     } finally {
@@ -130,18 +186,30 @@ export default function Dashboard() {
     carregar();
   }, [carregar]);
 
+  const eficiencia = dados?.eficiencia?.valor;
+  const eficienciaDisponivel =
+    eficiencia != null && Number.isFinite(Number(eficiencia));
+
   return (
     <>
       <header className="page-header">
         <div>
           <h1>Dashboard</h1>
-          <p className="page-subtitle">Bem-vindo ao sistema de gestão de obras</p>
+          <p className="page-subtitle">
+            Bem-vindo ao sistema de gestão de obras
+          </p>
         </div>
+
         <div className="page-actions">
-          <button type="button" className="btn" onClick={() => window.print()}>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => window.print()}
+          >
             <IconDownload size={18} />
             Exportar
           </button>
+
           <button
             type="button"
             className="btn btn-primary"
@@ -172,31 +240,48 @@ export default function Dashboard() {
               valor={doisDigitos(dados.obrasAtivas.valor)}
               detalhe={dados.obrasAtivas.detalhe}
             />
+
             <StatCard
-              titulo="Diários Pendentes"
+              titulo="Diários Registrados"
               valor={doisDigitos(dados.diariosPendentes.valor)}
               detalhe={dados.diariosPendentes.detalhe}
             />
+
             <StatCard
               titulo="Custo Total (MTD)"
               valor={moeda.format(dados.custoTotal.valor)}
               detalhe={dados.custoTotal.detalhe}
             />
+
             <StatCard
               titulo="Eficiência"
-              valor={`${dados.eficiencia.valor}%`}
+              valor={eficienciaDisponivel ? `${eficiencia}%` : "—"}
+              detalhe={
+                eficienciaDisponivel
+                  ? undefined
+                  : "Indicador ainda não disponível"
+              }
               icone={IconBolt}
             >
-              <div
-                className="meter"
-                role="progressbar"
-                aria-label="Eficiência"
-                aria-valuenow={dados.eficiencia.valor}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
-                <span style={{ width: `${dados.eficiencia.valor}%` }} />
-              </div>
+              {eficienciaDisponivel && (
+                <div
+                  className="meter"
+                  role="progressbar"
+                  aria-label="Eficiência"
+                  aria-valuenow={Number(eficiencia)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <span
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.max(0, Number(eficiencia))
+                      )}%`,
+                    }}
+                  />
+                </div>
+              )}
             </StatCard>
           </section>
 
@@ -205,17 +290,20 @@ export default function Dashboard() {
               <h2 id="titulo-progresso" className="panel-title">
                 Progresso das Obras
               </h2>
+
               {dados.progressoObras.length > 0 ? (
                 <ProgressChart obras={dados.progressoObras} />
               ) : (
                 <div className="state">
-                  <p>Nenhum projeto cadastrado.</p>
+                  <p>
+                    Nenhum dado de progresso disponível para as obras.
+                  </p>
                   <button
                     type="button"
                     className="btn btn-primary"
                     onClick={() => navigate("/projetos")}
                   >
-                    Criar primeiro projeto
+                    Ver projetos
                   </button>
                 </div>
               )}
@@ -225,10 +313,13 @@ export default function Dashboard() {
               <h2 id="titulo-atividades" className="panel-title">
                 Atividades Recentes
               </h2>
+
               {dados.atividades.length > 0 ? (
                 <ActivityList atividades={dados.atividades} />
               ) : (
-                <p className="page-subtitle">Nenhuma atividade ainda.</p>
+                <p className="page-subtitle">
+                  Nenhuma atividade registrada ainda.
+                </p>
               )}
             </section>
           </div>
