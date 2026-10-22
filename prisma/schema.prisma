@@ -1,0 +1,118 @@
+/// Database Schema for CRM Engineer Civil
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Models
+
+// Engenheiros (Engineers)
+model Engenheiro {
+  id           String   @id @default(uuid())
+  nome         String
+  email        String   @unique
+  senha        String
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  // Relations
+  projetos    Projeto[]
+  diariosObra DiarioObra[]
+}
+
+// Clientes
+model Cliente {
+  id       String    @id @default(uuid())
+  nome     String
+  email    String    @unique
+  telefone String
+  criadoEm DateTime  @default(now())
+  projetos Projeto[]
+}
+
+// Projetos (with Kanban status)
+model Projeto {
+  id           String   @id @default(uuid())
+  titulo       String
+  descricao    String?
+  status       String // "planejamento", "em_andamento", "concluido", "cancelado"
+  prioridade   String // "baixa", "media", "alta"
+  clienteId    String
+  engenheiroId String?
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  // Relations
+  cliente Cliente @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+  engenheiro  Engenheiro?  @relation(fields: [engenheiroId], references: [id], onDelete: SetNull)
+  arquivos    Arquivo[]
+  medicoes    Medicao[]
+  diariosObra DiarioObra[]
+  orcamentos  Orcamento[]
+}
+
+// DiarioObra (RF01 - Work Diary)
+model DiarioObra {
+  id           String   @id @default(uuid())
+  data         DateTime
+  descricao    String
+  fotos        String[] // URLs or paths to photos
+  observacoes  String?
+  projetoId    String
+  engenheiroId String?
+  criadoEm     DateTime @default(now())
+
+  // Relations
+  projeto    Projeto     @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  engenheiro Engenheiro? @relation(fields: [engenheiroId], references: [id], onDelete: SetNull)
+  medicoes   Medicao[]
+}
+
+// Medicao (Measurements - RF01)
+model Medicao {
+  id           String      @id @default(uuid())
+  descricao    String
+  valor        Float
+  unidade      String // "m2", "m3", "kg", etc
+  data         DateTime    @default(now())
+  projetoId    String
+  criadoEm     DateTime    @default(now())
+  diarioObraId String?
+  diarioObra   DiarioObra? @relation(fields: [diarioObraId], references: [id], onDelete: SetNull)
+
+  // Relations
+  projeto Projeto @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+}
+
+// Arquivos (RF04 - Repository with versioning)
+model Arquivo {
+  id        String   @id @default(uuid())
+  nome      String
+  tipo      String // "pdf", "dwg", "rvt"
+  caminho   String // Path or URL to file
+  versao    Int      @default(1)
+  projetoId String
+  criadoEm  DateTime @default(now())
+
+  // Relations
+  projeto Projeto @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+}
+
+// Orcamentos (Budgets - RF05/SINAPI)
+model Orcamento {
+  id          String   @id @default(uuid())
+  nome        String // "Orçamento Básico", "Orçamento Completo", etc
+  descricao   String?
+  valor       Float
+  dataCriacao DateTime @default(now())
+  projetoId   String
+  criadoEm    DateTime @default(now())
+
+  // Relations
+  projeto Projeto @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+}

@@ -1,0 +1,121 @@
+-- CreateTable
+CREATE TABLE "Engenheiro" (
+    "id" TEXT NOT NULL,
+    "nome" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "senha" TEXT NOT NULL,
+    "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "atualizadoEm" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Engenheiro_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Cliente" (
+    "id" TEXT NOT NULL,
+    "nome" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "telefone" TEXT NOT NULL,
+    "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Cliente_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Projeto" (
+    "id" TEXT NOT NULL,
+    "titulo" TEXT NOT NULL,
+    "descricao" TEXT,
+    "status" TEXT NOT NULL,
+    "prioridade" TEXT NOT NULL,
+    "clienteId" TEXT NOT NULL,
+    "engenheiroId" TEXT,
+    "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "atualizadoEm" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Projeto_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "DiarioObra" (
+    "id" TEXT NOT NULL,
+    "data" TIMESTAMP(3) NOT NULL,
+    "descricao" TEXT NOT NULL,
+    "fotos" TEXT[],
+    "observacoes" TEXT,
+    "projetoId" TEXT NOT NULL,
+    "engenheiroId" TEXT,
+    "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "DiarioObra_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Medicao" (
+    "id" TEXT NOT NULL,
+    "descricao" TEXT NOT NULL,
+    "valor" DOUBLE PRECISION NOT NULL,
+    "unidade" TEXT NOT NULL,
+    "data" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "projetoId" TEXT NOT NULL,
+    "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "diarioObraId" TEXT,
+
+    CONSTRAINT "Medicao_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Arquivo" (
+    "id" TEXT NOT NULL,
+    "nome" TEXT NOT NULL,
+    "tipo" TEXT NOT NULL,
+    "caminho" TEXT NOT NULL,
+    "versao" INTEGER NOT NULL DEFAULT 1,
+    "projetoId" TEXT NOT NULL,
+    "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Arquivo_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Orcamento" (
+    "id" TEXT NOT NULL,
+    "nome" TEXT NOT NULL,
+    "descricao" TEXT,
+    "valor" DOUBLE PRECISION NOT NULL,
+    "dataCriacao" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "projetoId" TEXT NOT NULL,
+    "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Orcamento_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Engenheiro_email_key" ON "Engenheiro"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Cliente_email_key" ON "Cliente"("email");
+
+-- AddForeignKey
+ALTER TABLE "Projeto" ADD CONSTRAINT "Projeto_clienteId_fkey" FOREIGN KEY ("clienteId") REFERENCES "Cliente"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Projeto" ADD CONSTRAINT "Projeto_engenheiroId_fkey" FOREIGN KEY ("engenheiroId") REFERENCES "Engenheiro"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DiarioObra" ADD CONSTRAINT "DiarioObra_projetoId_fkey" FOREIGN KEY ("projetoId") REFERENCES "Projeto"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DiarioObra" ADD CONSTRAINT "DiarioObra_engenheiroId_fkey" FOREIGN KEY ("engenheiroId") REFERENCES "Engenheiro"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Medicao" ADD CONSTRAINT "Medicao_diarioObraId_fkey" FOREIGN KEY ("diarioObraId") REFERENCES "DiarioObra"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Medicao" ADD CONSTRAINT "Medicao_projetoId_fkey" FOREIGN KEY ("projetoId") REFERENCES "Projeto"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Arquivo" ADD CONSTRAINT "Arquivo_projetoId_fkey" FOREIGN KEY ("projetoId") REFERENCES "Projeto"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Orcamento" ADD CONSTRAINT "Orcamento_projetoId_fkey" FOREIGN KEY ("projetoId") REFERENCES "Projeto"("id") ON DELETE CASCADE ON UPDATE CASCADE;
