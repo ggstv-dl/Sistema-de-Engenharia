@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
+import Projetos from "./pages/Projetos";
 import EmBreve from "./pages/EmBreve";
 import { isAuthenticated, logout } from "./services/authService";
 import "./styles/app.css";
@@ -22,7 +23,7 @@ export default function App() {
       <Routes>
         <Route element={<Layout onLogout={handleLogout} />}>
           <Route index element={<Dashboard />} />
-          <Route path="projetos" element={<EmBreve titulo="Projetos" />} />
+          <Route path="projetos" element={<Projetos />} />
           <Route path="diario" element={<EmBreve titulo="Diário de Obra" />} />
           <Route path="orcamentos" element={<EmBreve titulo="Orçamentos" />} />
           <Route path="relatorios" element={<EmBreve titulo="Relatórios" />} />
