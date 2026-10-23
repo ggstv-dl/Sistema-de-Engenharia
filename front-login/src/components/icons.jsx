@@ -133,3 +133,37 @@ export const IconClose = (p) => (
     <path d="M6 6l12 12M18 6L6 18" />
   </Icon>
 );
+
+export const IconSun = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4" />
+  </Icon>
+);
+
+export const IconCloud = (p) => (
+  <Icon {...p}>
+    <path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 9.5a4.25 4.25 0 0 1 0 8.5z" />
+  </Icon>
+);
+
+export const IconRain = (p) => (
+  <Icon {...p}>
+    <path d="M7 15a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 6.5a4.25 4.25 0 0 1 0 8.5z" />
+    <path d="M8 18.5l-1 2M12 18.5l-1 2M16 18.5l-1 2" />
+  </Icon>
+);
+
+export const IconCamera = (p) => (
+  <Icon {...p}>
+    <path d="M4 8h3l1.5-2h7L17 8h3v11H4z" />
+    <circle cx="12" cy="13" r="3.5" />
+  </Icon>
+);
+
+export const IconTrash = (p) => (
+  <Icon {...p}>
+    <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+    <path d="M10 11v6M14 11v6" />
+  </Icon>
+);

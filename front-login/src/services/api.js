@@ -11,8 +11,12 @@ export class ApiError extends Error {
   }
 }
 
+// body pode ser um objeto (vai como JSON) ou um FormData (envio de arquivos).
 export async function request(path, { method = "GET", body, token } = {}) {
-  const headers = { "Content-Type": "application/json" };
+  const isForm = typeof FormData !== "undefined" && body instanceof FormData;
+
+  // Com FormData o navegador define o Content-Type sozinho (com o "boundary").
+  const headers = isForm ? {} : { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
 
   let response;
@@ -20,7 +24,7 @@ export async function request(path, { method = "GET", body, token } = {}) {
     response = await fetch(`${BASE_URL}${path}`, {
       method,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
     });
   } catch {
     throw new ApiError(
@@ -37,8 +41,12 @@ export async function request(path, { method = "GET", body, token } = {}) {
   }
 
   if (!response.ok) {
+    // O back-end do grupo responde com "mensagem"; aceitamos também "message" e "error".
     const message =
-      data?.message || data?.error || "Algo deu errado. Tente novamente.";
+      data?.mensagem ||
+      data?.message ||
+      data?.error ||
+      "Algo deu errado. Tente novamente.";
     throw new ApiError(message, response.status);
   }
 

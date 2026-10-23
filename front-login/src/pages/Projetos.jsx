@@ -16,6 +16,13 @@ const rotuloPrioridade = Object.fromEntries(
   PRIORIDADES.map((p) => [p.valor, p.rotulo])
 );
 
+// Data de hoje no fuso do computador (toISOString usaria UTC e viraria o dia à noite).
+function hojeLocal() {
+  const d = new Date();
+  const dois = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${dois(d.getMonth() + 1)}-${dois(d.getDate())}`;
+}
+
 function formatarData(iso) {
   if (!iso) return "—";
   const [ano, mes, dia] = iso.split("-");
@@ -66,7 +73,7 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
     localizacao: projeto?.localizacao ?? "",
     status: projeto?.status ?? "planejamento",
     prioridade: projeto?.prioridade ?? "media",
-    dataInicio: projeto?.dataInicio || new Date().toISOString().slice(0, 10),
+    dataInicio: projeto?.dataInicio || hojeLocal(),
   }));
   const [erros, setErros] = useState({});
   const [erroServidor, setErroServidor] = useState("");
