@@ -48,18 +48,19 @@ Integração planejada para facilitar o envio de orçamentos e documentos aos cl
 
 | Tecnologia | Finalidade |
 |---|---|
-| Node.js | Ambiente de execução JavaScript |
-| TypeScript | Tipagem estática e organização do código |
-| Express | Desenvolvimento da API REST |
+| Node.js (JavaScript, CommonJS) | Ambiente de execução |
+| Express 4 | Desenvolvimento da API REST |
 | PostgreSQL | Banco de dados relacional |
 | Prisma | Acesso e gerenciamento do banco de dados |
-| JWT | Autenticação baseada em tokens |
-| Bcryptjs | Hash de senhas |
-| Multer | Recebimento de arquivos |
-| PDFKit | Geração de documentos PDF |
+| JWT (jsonwebtoken) | Autenticação baseada em tokens |
+| bcrypt | Hash de senhas |
+| Helmet | Cabeçalhos de segurança HTTP |
+| Morgan | Log de requisições |
+| express-async-errors | Encaminha erros de funções assíncronas ao tratador de erros |
 | Dotenv | Gerenciamento de variáveis de ambiente |
 | CORS | Controle de requisições entre diferentes origens |
 | Nodemon | Reinicialização automática durante o desenvolvimento |
+| Multer e PDFKit | Planejados para upload de arquivos e geração de PDF (ainda não instalados) |
 
 ## 5. Requisitos para Execução
 
@@ -67,7 +68,7 @@ Antes de executar o projeto, verifique se os seguintes recursos estão instalado
 
 - Node.js versão 18 ou superior.
 - npm, instalado junto ao Node.js.
-- PostgreSQL.
+- Docker (para o PostgreSQL) ou um PostgreSQL já instalado.
 - Git.
 
 ## 6. Instalação
@@ -76,78 +77,86 @@ Clone o repositório e acesse o diretório do projeto:
 
 ```bash
 git clone <URL_DO_REPOSITORIO>
-cd crm-engineer-civil
+cd Sistema-de-Engenharia-main
 ```
 
-Instale as dependências:
+### 6.1. Subir o PostgreSQL com Docker
+
+```bash
+docker run --name crm-db -e POSTGRES_PASSWORD=senha123 -e POSTGRES_DB=crm_engineer_civil -p 5432:5432 -d postgres:16
+```
+
+Nas próximas vezes, inicie o container existente com `docker start crm-db`.
+
+### 6.2. Instalar dependências e configurar o ambiente
 
 ```bash
 npm install
-```
-
-Configure as variáveis de ambiente conforme a próxima seção.
-
-## 7. Configuração do Ambiente
-
-Crie um arquivo `.env` com base no arquivo `.env.example`, caso ele esteja disponível:
-
-```bash
 cp .env.example .env
 ```
 
-Configure as variáveis necessárias:
+No PowerShell, use `Copy-Item .env.example .env`. O `.env.example` já aponta para o banco criado acima; troque ao menos o `JWT_SECRET`.
 
-```env
-PORT=3000
-DATABASE_URL="postgresql://USUARIO:SENHA@localhost:5432/crm_engineer_civil?schema=public"
-JWT_SECRET="SUA_CHAVE_SECRETA"
-JWT_EXPIRES_IN=24h
-WHATSAPP_API_KEY="SUA_CHAVE_API"
-WHATSAPP_FROM_NUMBER="NUMERO_CONFIGURADO_NO_SERVICO"
+### 6.3. Preparar o banco
+
+```bash
+npm run db:generate
+npm run db:migrate
+npm run db:seed
 ```
 
-**Importante:** substitua os valores de exemplo pelas configurações reais do ambiente. Não compartilhe credenciais e nunca envie o arquivo `.env` ao repositório.
+O seed cria dois engenheiros, dois clientes e dados de exemplo. Os dois engenheiros usam a senha `123456` (somente para desenvolvimento). Ele pode ser executado mais de uma vez sem duplicar nem quebrar.
 
-A variável `WHATSAPP_API_KEY` e as configurações relacionadas ao WhatsApp dependem do provedor de integração escolhido.
-
-Caso o projeto utilize Prisma, execute também os comandos de preparação do banco de dados previstos na configuração real do projeto.
-
-## 8. Execução
-
-### Desenvolvimento
+### 6.4. Iniciar a API
 
 ```bash
 npm run dev
 ```
 
-### Compilação para produção
+## 7. Configuração do Ambiente
 
-```bash
-npm run build
-```
+Todas as variáveis ficam no arquivo `.env` (modelo em `.env.example`):
 
-### Produção
+| Variável | Descrição | Padrão |
+|---|---|---|
+| `PORT` | Porta da API | `3000` |
+| `DATABASE_URL` | Conexão com o PostgreSQL | sem padrão |
+| `JWT_SECRET` | Segredo do token (obrigatório) | sem padrão |
+| `JWT_EXPIRES_IN` | Validade do token | `8h` |
+| `CORS_ORIGIN` | Origem permitida (aceita várias, separadas por vírgula) | `http://localhost:5173` |
+| `UPLOAD_DIR`, `MAX_FILE_SIZE_MB` | Upload de arquivos (ainda não implementado) | |
+| `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_API_URL` | Integração com WhatsApp (ainda não implementada) | |
 
-```bash
-npm start
-```
+**Importante:** não compartilhe credenciais e nunca envie o arquivo `.env` ao repositório.
 
-Os comandos acima pressupõem que os scripts correspondentes estejam configurados no `package.json`.
+## 8. Execução e Scripts
 
-Por padrão, considerando `PORT=3000`, a API estará disponível em:
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Inicia a API com reinício automático (nodemon) |
+| `npm start` | Inicia a API (produção) |
+| `npm run check` | Verifica a sintaxe dos arquivos JavaScript |
+| `npm run db:generate` | Gera o Prisma Client |
+| `npm run db:migrate` | Aplica as migrations (`prisma migrate dev`) |
+| `npm run db:seed` | Popula o banco com dados de exemplo |
+| `npm run db:studio` | Abre o Prisma Studio |
 
-`http://localhost:3000`
+Não há etapa de build: o projeto é JavaScript puro. Por padrão, a API estará disponível em `http://localhost:3000`.
 
 ## 9. Endpoints da API
 
-Os endpoints abaixo representam as rotas descritas na proposta atual e devem ser confirmados no código-fonte.
+| Método | Endpoint | Autenticação | Situação |
+|---|---|---|---|
+| GET | `/` | Não | Implementado |
+| GET | `/api/health` | Não | Implementado (503 se o banco estiver indisponível) |
+| POST | `/api/auth/registro` | Não | Implementado |
+| POST | `/api/auth/login` | Não | Implementado |
+| GET | `/api/dashboard` | Bearer token | Implementado |
+| POST | `/api/rdo/sync` | Não (por enquanto) | 501, ainda não implementado |
+| POST | `/api/projetos/:id/arquivos` | Não (por enquanto) | 501, ainda não implementado |
+| POST | `/api/whatsapp/enviar-orcamento` | Não (por enquanto) | 501, ainda não implementado |
 
-| Método | Endpoint | Descrição |
-|---|---|---|
-| GET | `/` | Verificação de disponibilidade da API |
-| POST | `/api/rdo/sync` | Sincronização de registros do Diário de Obra |
-| POST | `/api/projetos/:id/arquivos` | Envio de arquivos vinculados a um projeto |
-| POST | `/api/whatsapp/enviar-orcamento` | Solicitação de geração e envio de orçamento por WhatsApp |
+Rotas inexistentes respondem 404 em JSON. Erros respondem sempre no formato `{ "message": "..." }`.
 
 ## 10. Exemplos de Requisições
 
@@ -155,62 +164,91 @@ Os endpoints abaixo representam as rotas descritas na proposta atual e devem ser
 
 ```bash
 curl http://localhost:3000/
+curl http://localhost:3000/api/health
 ```
 
-### 10.2. Sincronizar o Diário de Obra
+### 10.2. Cadastro e login
+
+```bash
+curl -X POST http://localhost:3000/api/auth/registro \
+  -H "Content-Type: application/json" \
+  -d '{"nome": "Ana Souza", "email": "ana@exemplo.com", "senha": "senha12345"}'
+
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "ana@exemplo.com", "senha": "senha12345"}'
+```
+
+A senha deve ter de 8 a 72 caracteres. O login devolve um `token` para o cabeçalho `Authorization: Bearer <token>`.
+
+### 10.3. Dashboard
+
+```bash
+curl http://localhost:3000/api/dashboard \
+  -H "Authorization: Bearer <token>"
+```
+
+### 10.4. Sincronizar o Diário de Obra (501)
 
 ```bash
 curl -X POST http://localhost:3000/api/rdo/sync \
   -H "Content-Type: application/json" \
   -d '{
-    "obraId": "123",
+    "projetoId": "<id-do-projeto>",
     "data": "2024-01-15",
-    "anotacoes": "Fundação executada com sucesso"
+    "descricao": "Fundação executada com sucesso",
+    "observacoes": "Profundidade de 2,5 m"
   }'
 ```
 
-### 10.3. Enviar um arquivo para um projeto
+### 10.5. Enviar um arquivo para um projeto (501)
 
 ```bash
-curl -X POST http://localhost:3000/api/projetos/42/arquivos \
+curl -X POST http://localhost:3000/api/projetos/<id-do-projeto>/arquivos \
   -F "arquivo=@caminho/do/arquivo.pdf"
 ```
 
-### 10.4. Solicitar orçamento via WhatsApp
+### 10.6. Solicitar orçamento via WhatsApp (501)
 
 ```bash
 curl -X POST http://localhost:3000/api/whatsapp/enviar-orcamento \
   -H "Content-Type: application/json" \
   -d '{
-    "clienteId": "cliente-001",
-    "orcamentoId": "orc-2024-001"
+    "clienteId": "<id-do-cliente>",
+    "orcamentoId": "<id-do-orcamento>"
   }'
 ```
 
-Os corpos das requisições e as respostas esperadas devem ser ajustados conforme a implementação efetiva da API.
+Os três endpoints 501 ainda não leem o corpo da requisição; os corpos acima indicam o formato previsto.
 
 ## 11. Estrutura do Projeto
 
-A estrutura abaixo é uma referência inicial, baseada na organização apresentada na documentação. Ela deve ser atualizada para refletir os arquivos realmente existentes no repositório.
-
 ```text
-crm-engineer-civil/
+Sistema-de-Engenharia-main/
 ├── prisma/
-│   └── schema.prisma
+│   ├── migrations/
+│   ├── schema.prisma
+│   └── seed.js
+├── scripts/
+│   └── check.js
 ├── src/
-│   ├── app.ts
-│   ├── server.ts
-│   ├── routes.ts
-│   ├── controllers/
-│   ├── services/
-│   └── middleware/
+│   ├── server.js              # listen e encerramento limpo
+│   ├── app.js                 # configuração do Express
+│   ├── config/env.js          # leitura e validação das variáveis
+│   ├── lib/                   # prisma.js, erroHttp.js
+│   ├── middlewares/           # autenticarToken, tratadorErros, naoEncontrado
+│   ├── routes/                # index.js e um arquivo por domínio
+│   ├── controllers/           # transporte HTTP
+│   └── services/              # regra de negócio e Prisma
+├── front-login/               # front-end React + Vite
+├── .clinerules
 ├── .env.example
 ├── .gitignore
 ├── package.json
-├── package-lock.json
 └── README.md
 ```
 
+Fluxo de uma requisição: `routes` → `controllers` → `services`.
 
 ## 12. Considerações Finais
 
