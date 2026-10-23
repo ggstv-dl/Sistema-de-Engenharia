@@ -1,156 +1,174 @@
-const { PrismaClient } = require("@prisma/client");
+const bcrypt = require('bcrypt');
+const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
+const CUSTO_BCRYPT = 10;
+const SENHA_PADRAO = '123456';
+
+// Projeto não tem campo único; título + cliente identificam o projeto do seed.
+async function obterOuCriarProjeto(dados) {
+  const existente = await prisma.projeto.findFirst({
+    where: { titulo: dados.titulo, clienteId: dados.clienteId },
+  });
+
+  if (existente) {
+    return { projeto: existente, criado: false };
+  }
+
+  const projeto = await prisma.projeto.create({ data: dados });
+  return { projeto, criado: true };
+}
+
 async function main() {
-  // Create test users (Engenheiros)
-  const engenheiro1 = await prisma.engenheiro.create({
-    data: {
-      nome: "João Silva",
-      email: "joao@engineer.com",
-      senha: "123456", // senha simples para testes - em produção use bcrypt
+  const senhaHash = await bcrypt.hash(SENHA_PADRAO, CUSTO_BCRYPT);
+
+  // Upsert por e-mail: rodar o seed de novo não quebra o e-mail único.
+  // O update regrava o hash para corrigir bancos criados com senha em texto puro.
+  const engenheiro1 = await prisma.engenheiro.upsert({
+    where: { email: 'joao@engineer.com' },
+    update: { senha: senhaHash },
+    create: { nome: 'João Silva', email: 'joao@engineer.com', senha: senhaHash },
+  });
+
+  const engenheiro2 = await prisma.engenheiro.upsert({
+    where: { email: 'maria@engineer.com' },
+    update: { senha: senhaHash },
+    create: { nome: 'Maria Oliveira', email: 'maria@engineer.com', senha: senhaHash },
+  });
+
+  const cliente1 = await prisma.cliente.upsert({
+    where: { email: 'contato@construcoraabc.com' },
+    update: {},
+    create: {
+      nome: 'Construtora ABC Ltda',
+      email: 'contato@construcoraabc.com',
+      telefone: '(11) 98888-7777',
     },
   });
 
-  const engenheiro2 = await prisma.engenheiro.create({
-    data: {
-      nome: "Maria Oliveira",
-      email: "maria@engineer.com",
-      senha: "123456",
+  const cliente2 = await prisma.cliente.upsert({
+    where: { email: 'contato@engenhariaxyz.com' },
+    update: {},
+    create: {
+      nome: 'Engenharia XYZ',
+      email: 'contato@engenhariaxyz.com',
+      telefone: '(21) 97777-6666',
     },
   });
 
-  // Create test clients
-  const cliente1 = await prisma.cliente.create({
-    data: {
-      nome: "Construtora ABC Ltda",
-      email: "contato@construcoraabc.com",
-      telefone: "(11) 98888-7777",
-    },
+  const { projeto: projeto1, criado: criado1 } = await obterOuCriarProjeto({
+    titulo: 'Residencial Green Valley',
+    descricao: 'Conjunto habitacional com 50 unidades',
+    status: 'em_andamento',
+    prioridade: 'alta',
+    clienteId: cliente1.id,
+    engenheiroId: engenheiro1.id,
   });
 
-  const cliente2 = await prisma.cliente.create({
-    data: {
-      nome: "Engenharia XYZ",
-      email: "contato@engenhariaxyz.com",
-      telefone: "(21) 97777-6666",
-    },
+  const { projeto: projeto2, criado: criado2 } = await obterOuCriarProjeto({
+    titulo: 'Predial Centro-Sul',
+    descricao: 'Edifício comercial de 10 Andares',
+    status: 'planejamento',
+    prioridade: 'media',
+    clienteId: cliente2.id,
+    engenheiroId: engenheiro2.id,
   });
 
-  // Create test projects
-  const projeto1 = await prisma.projeto.create({
-    data: {
-      titulo: "Residencial Green Valley",
-      descricao: "Conjunto habitacional com 50 unidades",
-      status: "em_andamento",
-      prioridade: "alta",
-      cliente: { connect: { id: cliente1.id } },
-      engenheiro: { connect: { id: engenheiro1.id } },
-    },
-  });
+  // Dados filhos só são criados junto com o projeto, para não duplicar em nova execução.
+  if (criado1) {
+    await prisma.diarioObra.createMany({
+      data: [
+        {
+          data: new Date('2024-01-15'),
+          descricao: 'Fundação escavada com sucesso',
+          observacoes: 'Profundidade 2.5m',
+          fotos: ['foto1.jpg', 'foto2.jpg'],
+          projetoId: projeto1.id,
+          engenheiroId: engenheiro1.id,
+        },
+        {
+          data: new Date('2024-01-20'),
+          descricao: 'Estrutura de concreto armado',
+          observacoes: 'Laje executada',
+          fotos: ['foto3.jpg'],
+          projetoId: projeto1.id,
+          engenheiroId: engenheiro1.id,
+        },
+      ],
+    });
 
-  const projeto2 = await prisma.projeto.create({
-    data: {
-      titulo: "Predial Centro-Sul",
-      descricao: "Edifício comercial de 10 Andares",
-      status: "planejamento",
-      prioridade: "media",
-      cliente: { connect: { id: cliente2.id } },
-      engenheiro: { connect: { id: engenheiro2.id } },
-    },
-  });
+    await prisma.medicao.createMany({
+      data: [
+        {
+          descricao: 'Area do terreno',
+          valor: 500.5,
+          unidade: 'm2',
+          data: new Date('2024-01-15'),
+          projetoId: projeto1.id,
+        },
+        {
+          descricao: 'Volume de concreto',
+          valor: 150.2,
+          unidade: 'm3',
+          data: new Date('2024-01-20'),
+          projetoId: projeto1.id,
+        },
+      ],
+    });
 
-  // Create work diaries
-  await prisma.diarioObra.createMany({
-    data: [
-      {
-        data: new Date("2024-01-15"),
-        descricao: "Fundação escavada com sucesso",
-        observacoes: "Profundidade 2.5m",
-        fotos: ["foto1.jpg", "foto2.jpg"],
-        projetoId: projeto1.id,
-        engenheiroId: engenheiro1.id,
-      },
-      {
-        data: new Date("2024-01-20"),
-        descricao: "Estrutura de concreto armado",
-        observacoes: "Laje executada",
-        fotos: ["foto3.jpg"],
-        projetoId: projeto1.id,
-        engenheiroId: engenheiro1.id,
-      },
-    ],
-  });
-
-  // Create measurements
-  await prisma.medicao.createMany({
-    data: [
-      {
-        descricao: "Area do terreno",
-        valor: 500.5,
-        unidade: "m2",
-        data: new Date("2024-01-15"),
-        projetoId: projeto1.id,
-      },
-      {
-        descricao: "Volume de concreto",
-        valor: 150.2,
-        unidade: "m3",
-        data: new Date("2024-01-20"),
-        projetoId: projeto1.id,
-      },
-    ],
-  });
-
-  // Create files
-  await prisma.arquivo.createMany({
-    data: [
-      {
-        nome: "Projeto_Basico.pdf",
-        tipo: "pdf",
-        caminho: "/files/projetos/basico.pdf",
+    await prisma.arquivo.create({
+      data: {
+        nome: 'Projeto_Basico.pdf',
+        tipo: 'pdf',
+        caminho: '/files/projetos/basico.pdf',
         versao: 1,
         projetoId: projeto1.id,
       },
-      {
-        nome: "Laudo_Tecnico.pdf",
-        tipo: "pdf",
-        caminho: "/files/projetos/laudo.pdf",
-        versao: 1,
-        projetoId: projeto2.id,
-      },
-    ],
-  });
+    });
 
-  // Create budgets
-  await prisma.orcamento.createMany({
-    data: [
-      {
-        nome: "Orçamento Básico",
-        descricao: "Orçamento inicial de serviços",
+    await prisma.orcamento.create({
+      data: {
+        nome: 'Orçamento Básico',
+        descricao: 'Orçamento inicial de serviços',
         valor: 15000.0,
-        dataCriacao: new Date("2024-01-10"),
+        dataCriacao: new Date('2024-01-10'),
         projetoId: projeto1.id,
       },
-      {
-        nome: "Orçamento Completo",
-        descricao: "Orçamento detalhado com todas as especificações",
-        valor: 30000.0,
-        dataCriacao: new Date("2024-01-15"),
+    });
+  }
+
+  if (criado2) {
+    await prisma.arquivo.create({
+      data: {
+        nome: 'Laudo_Tecnico.pdf',
+        tipo: 'pdf',
+        caminho: '/files/projetos/laudo.pdf',
+        versao: 1,
         projetoId: projeto2.id,
       },
-    ],
-  });
+    });
 
-  console.log("Seed finalizado com sucesso!");
+    await prisma.orcamento.create({
+      data: {
+        nome: 'Orçamento Completo',
+        descricao: 'Orçamento detalhado com todas as especificações',
+        valor: 30000.0,
+        dataCriacao: new Date('2024-01-15'),
+        projetoId: projeto2.id,
+      },
+    });
+  }
+
+  console.log('Seed finalizado com sucesso!');
 }
 
 main()
   .then(async () => {
     await prisma.$disconnect();
   })
-  .catch(async (e) => {
-    console.error("Erro no seed:", e);
+  .catch(async (erro) => {
+    console.error('Erro no seed:', erro);
     await prisma.$disconnect();
     process.exit(1);
   });
