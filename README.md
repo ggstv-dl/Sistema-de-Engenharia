@@ -66,9 +66,9 @@ Integração planejada para facilitar o envio de orçamentos e documentos aos cl
 
 Antes de executar o projeto, verifique se os seguintes recursos estão instalados:
 
-- Node.js versão 18 ou superior.
-- npm, instalado junto ao Node.js.
-- Docker (para o PostgreSQL) ou um PostgreSQL já instalado.
+- Node.js 22 ou superior (somente para executar a API fora do container).
+- npm (somente para executar a API fora do container).
+- Docker Engine e Docker Compose v2 ou superior.
 - Git.
 
 ## 6. Instalação
@@ -80,38 +80,47 @@ git clone <URL_DO_REPOSITORIO>
 cd Sistema-de-Engenharia-main
 ```
 
-### 6.1. Subir o PostgreSQL com Docker
+### 6.1. Subir o ambiente completo com Compose
+
+Requer Docker Engine em execução, permissão para acessar o serviço e Docker Compose v2 ou superior. Não é necessário Node.js no host para este fluxo.
 
 ```bash
-docker run --name crm-db -e POSTGRES_PASSWORD=senha123 -e POSTGRES_DB=crm_engineer_civil -p 5432:5432 -d postgres:16
-```
-
-Nas próximas vezes, inicie o container existente com `docker start crm-db`.
-
-### 6.2. Instalar dependências e configurar o ambiente
-
-```bash
-npm install
 cp .env.example .env
+docker compose up -d --build --wait
+docker compose exec api npm run db:seed
+docker compose exec api node scripts/smoke.js
 ```
 
-No PowerShell, use `Copy-Item .env.example .env`. O `.env.example` já aponta para o banco criado acima; troque ao menos o `JWT_SECRET`.
+No PowerShell, use `Copy-Item .env.example .env`. Se já houver `.env`, preserve-o e ajuste as variáveis conforme o modelo. Troque `JWT_SECRET` por uma chave aleatória (`openssl rand -hex 32`).
 
-### 6.3. Preparar o banco
+O Compose inicia PostgreSQL 16 com volume persistente e só inicia a API quando o banco estiver saudável. A imagem instala dependências com `npm ci`, gera o Prisma Client e aplica as migrations versionadas com `prisma migrate deploy` antes de iniciar a API. API em `http://localhost:3000`; PostgreSQL acessível apenas localmente.
+
+O seed é manual e exclusivo de desenvolvimento: cria dois engenheiros, dois clientes e dados de exemplo. Login: `joao@engineer.com` ou `maria@engineer.com`, senha `123456`. Reexecutá-lo redefine as senhas desses usuários e não duplica os dados. Não execute em produção.
+
+O smoke verifica health, dashboard sem token (401), senha incorreta (401), login (200) e dashboard autenticado com dados (200), sem imprimir tokens.
 
 ```bash
+docker compose logs --tail=100 api db
+docker compose down
+```
+
+`down` preserva o volume do banco. Se houver conflito de portas, configure `PORT` e `POSTGRES_PORT` no `.env`. Ao trocar a porta do banco, ajuste também `DATABASE_URL` para executar a API no host. Se alterar credenciais após criar o volume, o PostgreSQL mantém as credenciais existentes; alinhe o `.env` com elas.
+
+### 6.2. Alternativa: API no host
+
+Use Node.js 22 ou superior e npm. O banco continua no Compose:
+
+```bash
+cp .env.example .env
+docker compose up -d db --wait
+npm ci
 npm run db:generate
-npm run db:migrate
+npx prisma migrate deploy
 npm run db:seed
-```
-
-O seed cria dois engenheiros, dois clientes e dados de exemplo. Os dois engenheiros usam a senha `123456` (somente para desenvolvimento). Ele pode ser executado mais de uma vez sem duplicar nem quebrar.
-
-### 6.4. Iniciar a API
-
-```bash
 npm run dev
 ```
+
+Para criar novas migrations durante o desenvolvimento, use `npm run db:migrate`. O `DATABASE_URL` do modelo inclui usuário, senha e porta do banco local; o Compose substitui essa URL pelo hostname interno `db` para a API no container.
 
 ## 7. Configuração do Ambiente
 
@@ -120,6 +129,7 @@ Todas as variáveis ficam no arquivo `.env` (modelo em `.env.example`):
 | Variável | Descrição | Padrão |
 |---|---|---|
 | `PORT` | Porta da API | `3000` |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT` | Banco local do Compose | `crm`, `crm_local_dev`, `crm_engineer_civil`, `5432` |
 | `DATABASE_URL` | Conexão com o PostgreSQL | sem padrão |
 | `JWT_SECRET` | Segredo do token (obrigatório) | sem padrão |
 | `JWT_EXPIRES_IN` | Validade do token | `8h` |
@@ -253,3 +263,7 @@ Fluxo de uma requisição: `routes` → `controllers` → `services`.
 ## 12. Considerações Finais
 
 O CRM Engineer Civil tem como objetivo contribuir para a organização e a digitalização das atividades de engenheiros civis autônomos, integrando recursos de gerenciamento de projetos, registro de informações de campo e geração de documentos em uma API preparada para evoluir conforme as necessidades do sistema.
+
+## 13. Registro de execução
+
+Veja [26/10/2026 — F1 e S0](docs/2026-10-26.md) para evidências, limitações da validação e pendências da conta Meta.

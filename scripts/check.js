@@ -14,6 +14,7 @@ function listarArquivosJs(pasta) {
 
 const arquivos = [
   ...listarArquivosJs(path.join(raiz, 'src')),
+  ...listarArquivosJs(path.join(raiz, 'scripts')),
   path.join(raiz, 'prisma', 'seed.js'),
 ];
 
