@@ -42,6 +42,8 @@ model Projeto {
   descricao    String?
   status       String // "planejamento", "em_andamento", "concluido", "cancelado"
   prioridade   String // "baixa", "media", "alta"
+  localizacao  String?
+  dataInicio   DateTime?
   clienteId    String
   engenheiroId String?
   criadoEm     DateTime @default(now())
@@ -63,6 +65,10 @@ model DiarioObra {
   descricao    String
   fotos        String[] // URLs or paths to photos
   observacoes  String?
+  atividade    String?
+  clima        String?
+  maoDeObra    Json?
+  equipamentos Json?
   projetoId    String
   engenheiroId String?
   criadoEm     DateTime @default(now())
