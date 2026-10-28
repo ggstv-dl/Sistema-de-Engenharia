@@ -2,6 +2,11 @@
 // isso facilita reaproveitar no React Native depois.
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+let callbackNaoAutorizado = null;
+
+export function onNaoAutorizado(callback) {
+  callbackNaoAutorizado = callback;
+}
 
 export class ApiError extends Error {
   constructor(message, status) {
@@ -41,6 +46,9 @@ export async function request(path, { method = "GET", body, token } = {}) {
   }
 
   if (!response.ok) {
+    if (response.status === 401 && token) {
+      callbackNaoAutorizado?.();
+    }
     // O back-end do grupo responde com "mensagem"; aceitamos também "message" e "error".
     const message =
       data?.mensagem ||

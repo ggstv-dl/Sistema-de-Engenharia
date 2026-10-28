@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Layout from "./components/Layout";
@@ -7,10 +7,19 @@ import Projetos from "./pages/Projetos";
 import Diario from "./pages/Diario";
 import EmBreve from "./pages/EmBreve";
 import { isAuthenticated, logout } from "./services/authService";
+import { onNaoAutorizado } from "./services/api";
 import "./styles/app.css";
 
 export default function App() {
   const [logged, setLogged] = useState(isAuthenticated());
+
+  useEffect(() => {
+    onNaoAutorizado(() => {
+      logout();
+      setLogged(false);
+    });
+    return () => onNaoAutorizado(null);
+  }, []);
 
   if (!logged) return <Login onSuccess={() => setLogged(true)} />;
 
