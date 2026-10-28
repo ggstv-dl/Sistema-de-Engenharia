@@ -162,9 +162,9 @@ Não há etapa de build: o projeto é JavaScript puro. Por padrão, a API estar�
 | POST | `/api/auth/registro` | Não | Implementado |
 | POST | `/api/auth/login` | Não | Implementado |
 | GET | `/api/dashboard` | Bearer token | Implementado |
-| POST | `/api/rdo/sync` | Não (por enquanto) | 501, ainda não implementado |
-| POST | `/api/projetos/:id/arquivos` | Não (por enquanto) | 501, ainda não implementado |
-| POST | `/api/whatsapp/enviar-orcamento` | Não (por enquanto) | 501, ainda não implementado |
+| POST | `/api/rdo/sync` | Bearer token | 501, ainda não implementado |
+| POST | `/api/projetos/:id/arquivos` | Bearer token | 501, ainda não implementado |
+| POST | `/api/whatsapp/enviar-orcamento` | Bearer token | 501, ainda não implementado |
 
 Rotas inexistentes respondem 404 em JSON. Erros respondem sempre no formato `{ "message": "..." }`.
 
