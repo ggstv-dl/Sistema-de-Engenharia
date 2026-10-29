@@ -1,6 +1,6 @@
 # Contrato da API do MVP
 
-Este é o contrato alvo. Auth, raiz, health e dashboard já existem. RDO, upload e WhatsApp continuam respondendo **501** após autenticação; os demais endpoints abaixo ainda serão implementados. Este documento não indica que estejam disponíveis.
+Este é o contrato alvo. Auth, raiz, health, dashboard, clientes e projetos (listar, criar e editar) já existem. RDO, upload e WhatsApp continuam respondendo **501** após autenticação; os demais endpoints abaixo ainda serão implementados.
 
 ## Regras gerais
 
@@ -42,7 +42,7 @@ Cliente: `{id, nome, email, telefone, criadoEm}`. O schema não vincula clientes
 
 ## Projetos
 
-Projeto retornado: `{id, titulo, descricao, status, prioridade, localizacao, dataInicio, clienteId, engenheiroId, criadoEm, atualizadoEm, cliente: {id, nome, email, telefone}, engenheiro: {id, nome}}`.
+Projeto retornado: `{id, titulo, descricao, status, prioridade, localizacao, dataInicio, criadoEm, atualizadoEm, cliente: {id, nome, email, telefone}, engenheiro: {id, nome}}`.
 
 `status`: `planejamento`, `em_andamento`, `concluido`, `cancelado`.
 `prioridade`: `baixa`, `media`, `alta`.
@@ -52,6 +52,8 @@ Projeto retornado: `{id, titulo, descricao, status, prioridade, localizacao, dat
 | `GET /api/projetos` | Bearer | Nenhum | **200** lista dos projetos do engenheiro logado, com cliente e engenheiro | 401, 500 |
 | `POST /api/projetos` | Bearer | `{titulo, descricao?, status, prioridade, clienteId, localizacao?, dataInicio?}` | **201** projeto criado; `engenheiroId = token.sub` | **400** dados/status/prioridade/data inválidos; **404** cliente inexistente; 401, 500 |
 | `PUT /api/projetos/:id` | Bearer | `{titulo?, descricao?, status?, prioridade?, clienteId?, localizacao?, dataInicio?}` | **200** projeto atualizado; campos omitidos são preservados | **400** dados inválidos; **404** projeto inacessível ou cliente inexistente; 401, 500 |
+
+`descricao`, `localizacao` e `dataInicio` aceitam `null` para limpar o campo, tanto na criação quanto na edição. `titulo`, `status`, `prioridade` e `clienteId` não aceitam `null`. PUT sem campos reconhecidos responde **400** `{message: "Informe ao menos um campo para atualizar."}`. `engenheiroId` no corpo é ignorado e nunca altera o dono. Projeto inexistente ou de outro engenheiro responde **404** `{message: "Projeto não encontrado."}`; cliente inexistente responde **404** `{message: "Cliente não encontrado."}`.
 
 ## Arquivos
 

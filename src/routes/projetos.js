@@ -7,5 +7,6 @@ router.use(autenticarToken);
 
 router.get('/', projetosController.listar);
 router.post('/', projetosController.criar);
+router.put('/:id', projetosController.atualizar);
 
 module.exports = router;

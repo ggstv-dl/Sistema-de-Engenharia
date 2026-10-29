@@ -3,13 +3,13 @@ const ErroHttp = require('../lib/erroHttp');
 const { statusProjeto, prioridadesProjeto } = require('../lib/constantesProjeto');
 
 function validarTextoOpcional(valor, campo, limite) {
-  if (valor !== undefined && (typeof valor !== 'string' || valor.length > limite)) {
+  if (valor !== undefined && valor !== null && (typeof valor !== 'string' || valor.length > limite)) {
     throw new ErroHttp(400, `${campo} deve ser um texto de até ${limite} caracteres.`);
   }
 }
 
 function validarDataInicio(valor) {
-  if (valor === undefined) return undefined;
+  if (valor === undefined || valor === null) return valor;
 
   const formatoIso = /^(\d{4})-(\d{2})-(\d{2})(?:T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)?)?$/;
   const partes = typeof valor === 'string' ? formatoIso.exec(valor) : null;
@@ -37,46 +37,70 @@ async function listar(req, res) {
   return res.json(projetos);
 }
 
+function validarDadosProjeto(corpo, parcial = false) {
+  const { titulo, descricao, status, prioridade, clienteId, localizacao, dataInicio } = corpo || {};
+  const dados = {};
+
+  if (!parcial || titulo !== undefined) {
+    if (typeof titulo !== 'string' || titulo.trim().length < 3 || titulo.trim().length > 150) {
+      throw new ErroHttp(400, 'O título deve ter entre 3 e 150 caracteres.');
+    }
+    dados.titulo = titulo.trim();
+  }
+
+  if (!parcial || clienteId !== undefined) {
+    if (typeof clienteId !== 'string' || !clienteId.trim()) {
+      throw new ErroHttp(400, 'Informe um clienteId válido.');
+    }
+    dados.clienteId = clienteId.trim();
+  }
+
+  if (descricao !== undefined) {
+    validarTextoOpcional(descricao, 'descricao', 1000);
+    dados.descricao = descricao;
+  }
+
+  if (localizacao !== undefined) {
+    validarTextoOpcional(localizacao, 'localizacao', 200);
+    dados.localizacao = localizacao;
+  }
+
+  if (!parcial || status !== undefined) {
+    if (!statusProjeto.includes(status)) {
+      throw new ErroHttp(400, `Status inválido. Valores aceitos: ${statusProjeto.join(', ')}.`);
+    }
+    dados.status = status;
+  }
+
+  if (!parcial || prioridade !== undefined) {
+    if (!prioridadesProjeto.includes(prioridade)) {
+      throw new ErroHttp(400, `Prioridade inválida. Valores aceitos: ${prioridadesProjeto.join(', ')}.`);
+    }
+    dados.prioridade = prioridade;
+  }
+
+  if (dataInicio !== undefined) {
+    dados.dataInicio = validarDataInicio(dataInicio);
+  }
+
+  if (parcial && Object.keys(dados).length === 0) {
+    throw new ErroHttp(400, 'Informe ao menos um campo para atualizar.');
+  }
+
+  return dados;
+}
+
 async function criar(req, res) {
-  const { titulo, descricao, status, prioridade, clienteId, localizacao, dataInicio } = req.body || {};
-
-  if (typeof titulo !== 'string' || typeof clienteId !== 'string') {
-    throw new ErroHttp(400, 'Informe título e clienteId válidos.');
-  }
-
-  const tituloNormalizado = titulo.trim();
-  const clienteIdInformado = clienteId.trim();
-
-  if (tituloNormalizado.length < 3 || tituloNormalizado.length > 150) {
-    throw new ErroHttp(400, 'O título deve ter entre 3 e 150 caracteres.');
-  }
-
-  if (!clienteIdInformado) {
-    throw new ErroHttp(400, 'Informe um clienteId válido.');
-  }
-
-  validarTextoOpcional(descricao, 'descricao', 1000);
-  validarTextoOpcional(localizacao, 'localizacao', 200);
-
-  if (!statusProjeto.includes(status)) {
-    throw new ErroHttp(400, `Status inválido. Valores aceitos: ${statusProjeto.join(', ')}.`);
-  }
-
-  if (!prioridadesProjeto.includes(prioridade)) {
-    throw new ErroHttp(400, `Prioridade inválida. Valores aceitos: ${prioridadesProjeto.join(', ')}.`);
-  }
-
-  const projeto = await projetosService.criar({
-    titulo: tituloNormalizado,
-    descricao,
-    status,
-    prioridade,
-    clienteId: clienteIdInformado,
-    localizacao,
-    dataInicio: validarDataInicio(dataInicio),
-  }, req.usuario.sub);
+  const dados = validarDadosProjeto(req.body);
+  const projeto = await projetosService.criar(dados, req.usuario.sub);
 
   return res.status(201).json(projeto);
 }
 
-module.exports = { listar, criar };
+async function atualizar(req, res) {
+  const dados = validarDadosProjeto(req.body, true);
+  const projeto = await projetosService.atualizar(req.params.id, dados, req.usuario.sub);
+  return res.json(projeto);
+}
+
+module.exports = { listar, criar, atualizar };
