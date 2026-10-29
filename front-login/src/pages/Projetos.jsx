@@ -64,12 +64,13 @@ function Campo({ id, rotulo, erro, className = "", children }) {
 
 function ProjetoModal({ projeto, onClose, onSalvo }) {
   const ref = useRef(null);
-  const editando = Boolean(projeto);
+  const editando = Boolean(projeto?.id);
 
   const [form, setForm] = useState(() => ({
     titulo: projeto?.titulo ?? "",
     cliente: projeto?.cliente ?? "",
-    engenheiro: projeto?.engenheiro ?? getUser()?.nome ?? "",
+    clienteId: projeto?.clienteId ?? null,
+    engenheiro: getUser()?.nome ?? "",
     localizacao: projeto?.localizacao ?? "",
     status: projeto?.status ?? "planejamento",
     prioridade: projeto?.prioridade ?? "media",
@@ -94,9 +95,7 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
     const novos = {};
     if (form.titulo.trim().length < 3)
       novos.titulo = "Informe o nome do projeto (mínimo 3 letras).";
-    if (!form.cliente.trim()) novos.cliente = "Informe o cliente.";
-    if (!form.engenheiro.trim())
-      novos.engenheiro = "Informe o engenheiro responsável.";
+    if (!editando && !form.cliente.trim()) novos.cliente = "Informe o cliente.";
     setErros(novos);
     if (Object.keys(novos).length > 0) return;
 
@@ -109,7 +108,7 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
         engenheiro: form.engenheiro.trim(),
         localizacao: form.localizacao.trim(),
         id: projeto?.id,
-      });
+      }, projeto);
       onSalvo();
     } catch (err) {
       setErroServidor(err.message || "Não foi possível salvar o projeto.");
@@ -160,18 +159,16 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
               value={form.cliente}
               onChange={mudar("cliente")}
               aria-invalid={Boolean(erros.cliente)}
-              disabled={salvando}
+              disabled={editando || salvando}
             />
           </Campo>
 
-          <Campo id="engenheiro" rotulo="Engenheiro responsável" erro={erros.engenheiro}>
+          <Campo id="engenheiro" rotulo="Engenheiro responsável">
             <input
               id="engenheiro"
               type="text"
               value={form.engenheiro}
-              onChange={mudar("engenheiro")}
-              aria-invalid={Boolean(erros.engenheiro)}
-              disabled={salvando}
+              disabled
             />
           </Campo>
 
@@ -484,7 +481,7 @@ export default function Projetos() {
                     <td>
                       <strong>{p.titulo}</strong>
                       <span className="cell-sub">
-                        {[p.cliente, p.localizacao].filter(Boolean).join(" • ")}
+                        {[p.cliente, p.localizacao].filter(Boolean).join(" • ") || "—"}
                       </span>
                     </td>
                     <td>{p.engenheiro || "—"}</td>

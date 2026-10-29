@@ -3,7 +3,7 @@ import { getToken } from "./authService";
 
 // Com VITE_USE_MOCK=true usa dados de exemplo (salvos no navegador, então
 // o que você criar/editar continua depois de recarregar a página).
-// Com false, chama a API real. AJUSTE os pontos marcados quando o back-end definir o formato.
+// Com false, chama a API real.
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 const PROJETOS_PATH = "/api/projetos";
 const STORAGE_KEY = "se_mock_projetos";
@@ -32,25 +32,25 @@ function normalizar(p) {
     id: p.id,
     titulo: p.titulo ?? p.nome ?? "(sem título)",
     cliente: nomeDe(p.cliente),
+    clienteId: p.cliente?.id ?? p.clienteId ?? null,
     engenheiro: nomeDe(p.engenheiro),
-    localizacao: p.localizacao ?? "", // (*) ainda não existe no back-end
+    localizacao: p.localizacao ?? "",
     status: p.status ?? "planejamento",
     prioridade: p.prioridade ?? "media",
     progresso: Number.isFinite(p.progresso) ? p.progresso : null, // (*)
-    dataInicio: String(p.dataInicio ?? p.createdAt ?? "").slice(0, 10), // (*)
+    dataInicio: String(p.dataInicio ?? p.criadoEm ?? "").slice(0, 10),
   };
 }
 
-// Formulário -> corpo enviado para a API (AJUSTE os nomes dos campos aqui)
 function montarCorpo(d) {
   return {
     titulo: d.titulo,
+    ...(d.descricao !== undefined ? { descricao: d.descricao } : {}),
     status: d.status,
     prioridade: d.prioridade,
-    cliente: d.cliente,
-    engenheiro: d.engenheiro,
-    localizacao: d.localizacao,
-    dataInicio: d.dataInicio,
+    ...(d.clienteId ? { clienteId: d.clienteId } : {}),
+    localizacao: d.localizacao || null,
+    dataInicio: d.dataInicio || null,
   };
 }
 
@@ -106,7 +106,7 @@ export async function listarProjetos() {
 }
 
 // Cria (sem id) ou edita (com id)
-export async function salvarProjeto(dados) {
+export async function salvarProjeto(dados, projetoOriginal) {
   if (USE_MOCK) {
     await esperar(400);
     const lista = lerExemplo();
@@ -123,8 +123,14 @@ export async function salvarProjeto(dados) {
   const corpo = montarCorpo(dados);
   const token = getToken();
   if (dados.id) {
+    if (dados.clienteId === projetoOriginal?.clienteId) {
+      delete corpo.clienteId;
+    }
     await request(`${PROJETOS_PATH}/${dados.id}`, { method: "PUT", body: corpo, token });
   } else {
+    if (!dados.clienteId) {
+      throw new Error("Selecione um cliente para criar o projeto.");
+    }
     await request(PROJETOS_PATH, { method: "POST", body: corpo, token });
   }
 }
