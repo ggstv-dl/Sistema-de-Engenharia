@@ -52,3 +52,16 @@ export async function request(path, { method = "GET", body, token } = {}) {
 
   return data;
 }
+
+// Baixa um arquivo (PDF, CSV...) e devolve um Blob. Usado pelos relatórios.
+export async function requestBlob(path, { token } = {}) {
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, { headers });
+  } catch {
+    throw new ApiError("Não foi possível conectar ao servidor. Verifique sua internet.", 0);
+  }
+  if (!response.ok) throw new ApiError("Não foi possível baixar o arquivo.", response.status);
+  return response.blob();
+}
