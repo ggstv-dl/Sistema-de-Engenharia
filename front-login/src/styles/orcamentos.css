@@ -1,0 +1,302 @@
+/* Tela de Orçamentos. Usa as variáveis de cor e reaproveita tabela, modal e botões. */
+
+dialog.modal.modal-xl {
+  width: min(900px, calc(100% - 32px));
+}
+
+.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.orc-projeto {
+  white-space: normal;
+}
+
+.badge-orc-rascunho {
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border-input);
+}
+
+.badge-orc-enviado {
+  color: var(--text);
+  background: transparent;
+  border: 2px solid var(--text);
+}
+
+/* ---------- Passos ---------- */
+.stepper {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 12px 24px;
+  overflow-x: auto;
+  list-style: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.stepper li {
+  flex: 1 1 0;
+  min-width: 110px;
+}
+
+.stepper button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: default;
+}
+
+.stepper li.feito button {
+  color: var(--text);
+  cursor: pointer;
+}
+
+.stepper li.feito button:hover {
+  background: var(--surface-2);
+}
+
+.stepper li[aria-current="step"] button {
+  color: var(--text);
+}
+
+.passo-num {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  font-size: 0.8rem;
+  border: 1px solid var(--border-input);
+  border-radius: 50%;
+}
+
+.stepper li[aria-current="step"] .passo-num {
+  color: var(--primary-text);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.stepper li.feito .passo-num {
+  border-color: var(--text);
+}
+
+/* ---------- Consulta SINAPI ---------- */
+.sinapi-busca {
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.sinapi-lista {
+  max-height: 210px;
+  margin: 8px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.sinapi-lista li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sinapi-lista li:last-child {
+  border-bottom: 0;
+}
+
+.sinapi-lista strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.sinapi-lista .sinapi-vazio {
+  color: var(--muted);
+}
+
+.sinapi-titulo {
+  margin-top: 20px;
+}
+
+.itens-tabela input {
+  width: 100px;
+  min-height: 40px;
+  padding: 0 8px;
+  font-size: 0.95rem;
+  text-align: right;
+}
+
+.itens-tabela td:nth-child(2) {
+  white-space: normal;
+}
+
+.resumo-itens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 16px 0 8px;
+}
+
+.resumo-itens .field {
+  width: 140px;
+}
+
+/* ---------- Totais e prévia ---------- */
+.totais {
+  min-width: 260px;
+  margin: 0;
+}
+
+.totais div {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 4px 0;
+}
+
+.totais dt {
+  color: var(--muted);
+}
+
+.totais dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.totais-final {
+  margin-top: 4px;
+  padding-top: 8px !important;
+  font-size: 1.15rem;
+  border-top: 2px solid var(--text);
+}
+
+.totais-final dt {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.previa {
+  padding: 20px;
+  border: 1px solid var(--border-input);
+  border-radius: 10px;
+}
+
+.previa-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.previa-topo h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.previa-topo p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.previa-validade {
+  font-weight: 600;
+}
+
+.previa-dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 40px;
+  margin: 0 0 16px;
+}
+
+.previa-dados dt {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.previa-dados dd {
+  margin: 2px 0 0;
+}
+
+.previa-tabela td:nth-child(2) {
+  white-space: normal;
+}
+
+.previa .totais {
+  margin: 16px 0 0 auto;
+}
+
+.previa-obs {
+  margin: 14px 0 0;
+  font-size: 0.92rem;
+}
+
+.previa-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* ---------- Envio ---------- */
+.envio-resumo {
+  margin: 0 0 12px;
+}
+
+.envio-ok {
+  align-items: center;
+  text-align: center;
+}
+
+.envio-check {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--text);
+  border-radius: 50%;
+}
+
+@media (max-width: 700px) {
+  .totais {
+    width: 100%;
+  }
+
+  .stepper {
+    padding: 10px 12px;
+  }
+
+  .stepper li {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+
+  /* no celular só o passo atual mostra o nome */
+  .stepper li:not([aria-current="step"]) .passo-nome {
+    display: none;
+  }
+}

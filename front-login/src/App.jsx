@@ -5,7 +5,8 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Projetos from "./pages/Projetos";
 import Diario from "./pages/Diario";
-import EmBreve from "./pages/EmBreve";
+import Orcamentos from "./pages/Orcamentos";
+import Relatorios from "./pages/Relatorios";
 import { isAuthenticated, logout } from "./services/authService";
 import { onNaoAutorizado } from "./services/api";
 import "./styles/app.css";
@@ -35,8 +36,8 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="projetos" element={<Projetos />} />
           <Route path="diario" element={<Diario />} />
-          <Route path="orcamentos" element={<EmBreve titulo="Orçamentos" />} />
-          <Route path="relatorios" element={<EmBreve titulo="Relatórios" />} />
+          <Route path="orcamentos" element={<Orcamentos />} />
+          <Route path="relatorios" element={<Relatorios />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
