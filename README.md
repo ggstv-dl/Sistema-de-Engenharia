@@ -167,7 +167,8 @@ Não há etapa de build: o projeto é JavaScript puro. Por padrão, a API estar�
 | GET | `/api/projetos` | Bearer token | Implementado |
 | POST | `/api/projetos` | Bearer token | Implementado |
 | PUT | `/api/projetos/:id` | Bearer token | Implementado |
-| POST | `/api/rdo/sync` | Bearer token | 501, ainda não implementado |
+| POST | `/api/rdo/sync` | Bearer token | Implementado (201) |
+| GET | `/api/diarios` | Bearer token | Implementado; filtro opcional `?projetoId=<id>`; até 200 registros |
 | POST | `/api/projetos/:id/arquivos` | Bearer token | 501, ainda não implementado |
 | POST | `/api/whatsapp/enviar-orcamento` | Bearer token | 501, ainda não implementado |
 
@@ -203,10 +204,11 @@ curl http://localhost:3000/api/dashboard \
   -H "Authorization: Bearer <token>"
 ```
 
-### 10.4. Sincronizar o Diário de Obra (501)
+### 10.4. Sincronizar o Diário de Obra
 
 ```bash
 curl -X POST http://localhost:3000/api/rdo/sync \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
     "projetoId": "<id-do-projeto>",
@@ -234,7 +236,7 @@ curl -X POST http://localhost:3000/api/whatsapp/enviar-orcamento \
   }'
 ```
 
-Os três endpoints 501 ainda não leem o corpo da requisição; os corpos acima indicam o formato previsto.
+Os endpoints de upload e WhatsApp ainda respondem 501 após autenticação; seus corpos acima indicam o formato previsto.
 
 ## 11. Estrutura do Projeto
 
