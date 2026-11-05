@@ -1,6 +1,6 @@
 # Contrato da API do MVP
 
-Este é o contrato alvo. Auth, raiz, health, dashboard, clientes e projetos (listar, criar e editar) já existem. RDO, upload e WhatsApp continuam respondendo **501** após autenticação; os demais endpoints abaixo ainda serão implementados.
+Este é o contrato alvo. Auth, raiz, health, dashboard, clientes, projetos (listar, criar e editar) e sync do RDO já existem. Upload e WhatsApp continuam respondendo **501** após autenticação; os demais endpoints abaixo ainda serão implementados.
 
 ## Regras gerais
 
@@ -63,14 +63,18 @@ Projeto retornado: `{id, titulo, descricao, status, prioridade, localizacao, dat
 
 ## Diário de Obra
 
-Diário: `{id, projetoId, engenheiroId, data, atividade, descricao, observacoes, clima, maoDeObra, equipamentos, fotos, criadoEm}`.
+Diário retornado: `{id, projetoId, data, atividade, clima, descricao, observacoes, maoDeObra, equipamentos, fotos, criadoEm, projeto: {id, titulo}, engenheiro: {id, nome}}`. O `engenheiroId` é persistido a partir de `token.sub`; na resposta, seu identificador fica em `engenheiro.id`.
 
 | Método e rota | Autenticação | Corpo | Sucesso | Erros |
 |---|---|---|---|---|
-| `POST /api/rdo/sync` | Bearer | `{projetoId, data, atividade?, descricao, observacoes?, clima?, maoDeObra?: [{funcao, qtd}], equipamentos?: [{nome, qtd}], fotos?: string[]}` | **201** diário criado; `engenheiroId = token.sub`; fotos omitidas resultam em `[]` | **400** dados/data/listas inválidos; **404** projeto inacessível; 401, 500; atualmente 501 |
+| `POST /api/rdo/sync` | Bearer | `{projetoId, data, atividade?, descricao, observacoes?, clima?, maoDeObra?: [{funcao, qtd}], equipamentos?: [{nome, qtd}], fotos?: string[]}` | **201** diário no formato acima; `engenheiroId = token.sub`; fotos omitidas resultam em `[]` | **400** dados/data/listas inválidos; **404** projeto inacessível; 401, 500 |
 | `GET /api/diarios` | Bearer | Nenhum | **200** lista de diários do engenheiro logado, com todos os campos acima e `projeto: {id, titulo}`, `engenheiro: {id, nome}`, ordenada por `data` decrescente e depois `criadoEm` decrescente | 401, 500 |
 
-`fotos` contém caminhos devolvidos pelo upload. `maoDeObra` e `equipamentos` são arrays JSON; `qtd` é numérico e `funcao`/`nome` são strings.
+No sync, `projetoId` deve ser uma string não vazia; `descricao`, após trim, deve ter de 3 a 5000 caracteres. `atividade`, `clima` e `observacoes` aceitam strings de até 200, 100 e 2000 caracteres, respectivamente. Campos opcionais omitidos são persistidos como `null`, exceto `fotos`, cujo padrão é `[]`; `null` explícito não substitui os tipos de entrada esperados.
+
+`data` deve ser ISO 8601 válida e não pode ultrapassar o fim do dia atual no fuso do servidor. Datas sem horário são interpretadas à meia-noite nesse fuso; timestamps respeitam o offset informado. Data futura responde **400** `{message: "A data do diário não pode ser futura."}`.
+
+`fotos` contém até 10 caminhos de até 255 caracteres, começando com `/uploads/` e sem `..`. O sync valida o formato dos caminhos, sem verificar a existência física dos arquivos. `maoDeObra` e `equipamentos` aceitam até 30 objetos cada; `funcao`/`nome`, após trim, devem ter de 1 a 60 caracteres, e `qtd` deve ser um inteiro de 1 a 1000. Erros de validação identificam o campo inválido.
 
 ## Orçamentos
 
