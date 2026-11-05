@@ -9,6 +9,7 @@ import {
   IconLogout,
 } from "./icons";
 import { getUser } from "../services/authService";
+import logoBranca from "../assets/logo-horizontal-branca.png";
 
 const ITEMS = [
   { to: "/", label: "Dashboard", icon: IconDashboard, end: true },
@@ -34,8 +35,8 @@ export default function Layout({ onLogout }) {
   return (
     <div className="app">
       <aside className="sidebar">
-        <div className="brand" role="img" aria-label="Sistema de Engenharia">
-          co
+        <div className="brand">
+          <img className="brand-img" src={logoBranca} alt="Leandro Barros - Engenheiro Civil" />
         </div>
 
         <nav aria-label="Principal">
