@@ -170,7 +170,8 @@ Não há etapa de build: o projeto é JavaScript puro. Por padrão, a API estar�
 | PUT | `/api/projetos/:id` | Bearer token | Implementado |
 | POST | `/api/rdo/sync` | Bearer token | Implementado (201) |
 | GET | `/api/diarios` | Bearer token | Implementado; filtro opcional `?projetoId=<id>`; até 200 registros |
-| POST | `/api/projetos/:id/arquivos` | Bearer token | 501, ainda não implementado |
+| POST | `/api/projetos/:id/arquivos` | Bearer token | Implementado (201); upload versionado |
+| GET | `/api/projetos/:id/arquivos` | Bearer token | Implementado; lista todas as versões |
 | POST | `/api/whatsapp/enviar-orcamento` | Bearer token | 501, ainda não implementado |
 
 Rotas inexistentes respondem 404 em JSON. Erros respondem sempre no formato `{ "message": "..." }`.
@@ -221,12 +222,15 @@ curl -X POST http://localhost:3000/api/rdo/sync \
   }'
 ```
 
-### 10.5. Enviar um arquivo para um projeto (501)
+### 10.5. Enviar um arquivo para um projeto
 
 ```bash
 curl -X POST http://localhost:3000/api/projetos/<id-do-projeto>/arquivos \
+  -H "Authorization: Bearer <token>" \
   -F "arquivo=@caminho/do/arquivo.pdf"
 ```
+
+Aceita PDF, DWG, RVT, JPG, JPEG e PNG, com limite padrão de 10 MB por arquivo. PDF e imagens têm a assinatura inicial conferida. Mesmo nome no mesmo projeto, sem diferenciar maiúsculas, cria uma nova versão; uploads anteriores são preservados. A listagem devolve nome em ordem alfabética e versões decrescentes por nome.
 
 ### 10.6. Solicitar orçamento via WhatsApp (501)
 
@@ -239,7 +243,7 @@ curl -X POST http://localhost:3000/api/whatsapp/enviar-orcamento \
   }'
 ```
 
-Os endpoints de upload e WhatsApp ainda respondem 501 após autenticação; seus corpos acima indicam o formato previsto.
+O endpoint de WhatsApp ainda responde 501 após autenticação; seu corpo acima indica o formato previsto.
 
 ## 11. Estrutura do Projeto
 

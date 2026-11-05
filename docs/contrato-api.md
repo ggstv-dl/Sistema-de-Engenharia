@@ -1,10 +1,11 @@
 # Contrato da API do MVP
 
-Este é o contrato alvo. Auth, raiz, health, dashboard, clientes, projetos (listar, criar e editar), sync do RDO e listagem de diários já existem. Upload e WhatsApp continuam respondendo **501** após autenticação; os demais endpoints abaixo ainda serão implementados.
+Este é o contrato alvo. Auth, raiz, health, dashboard, clientes, projetos (listar, criar e editar), sync do RDO, listagem de diários e arquivos (upload versionado e listagem) já existem. WhatsApp continua respondendo **501** após autenticação; os demais endpoints abaixo ainda serão implementados.
 
 ## Regras gerais
 
 - Todas as rotas exigem `Authorization: Bearer <token>`, exceto `GET /`, `GET /api/health`, `POST /api/auth/registro` e `POST /api/auth/login`.
+- No MVP, `GET /uploads/<uuid>.<ext>` é público, protegido pelo nome aleatório. Retorna `Cross-Origin-Resource-Policy: cross-origin`; JPG/JPEG/PNG ficam inline e os demais arquivos são baixados como attachment.
 - JSON em requisições e respostas, exceto upload multipart. Erros: `{ "message": "..." }`. Datas em ISO 8601; campos seguem `schema.prisma`. `?` indica entrada opcional; campos opcionais do banco podem retornar `null`.
 - Rotas protegidas: **401** se o token estiver ausente, inválido ou expirado. Dados inválidos: **400**; falhas internas: **500**, com mensagem genérica. Erros específicos constam abaixo.
 - Um projeto só pode ser lido ou alterado se `projeto.engenheiroId === token.sub`. Projeto inexistente ou de outro engenheiro: **404**, inclusive em operações de arquivos, diários, orçamentos e WhatsApp vinculadas a ele. Listagens filtram pelo dono.
@@ -59,7 +60,14 @@ Projeto retornado: `{id, titulo, descricao, status, prioridade, localizacao, dat
 
 | Método e rota | Autenticação | Corpo | Sucesso | Erros |
 |---|---|---|---|---|
-| `POST /api/projetos/:id/arquivos` | Bearer | `multipart/form-data`, campo `arquivo`, máximo **10 MB** | **201** `{id, nome, tipo, caminho, versao}`; `caminho` no formato `/uploads/<uuid>.<ext>` | **400** arquivo ausente/inválido; **413** acima do limite; **404** projeto inacessível; 401, 500; atualmente 501 |
+| `POST /api/projetos/:id/arquivos` | Bearer | `multipart/form-data`, campo `arquivo`, máximo **10 MB** por padrão, configurável por `MAX_FILE_SIZE_MB` | **201** `{id, nome, tipo, caminho, versao}`; `caminho` no formato `/uploads/<uuid>.<ext>` | **400** arquivo ausente/inválido; **413** acima do limite; **404** projeto inacessível; 401, 500 |
+| `GET /api/projetos/:id/arquivos` | Bearer | Nenhum | **200** lista de `{id, nome, tipo, caminho, versao, criadoEm}`, ordenada por nome sem diferenciar caixa e, dentro do mesmo nome, versão decrescente | **404** projeto inacessível; 401, 500 |
+
+O projeto é autorizado antes de qualquer gravação em disco. Extensões aceitas: `pdf`, `dwg`, `rvt`, `jpg`, `jpeg`, `png`, sem diferenciar caixa; `tipo` guarda a extensão em minúsculas. PDF deve começar com `%PDF`, PNG com `89 50 4E 47` e JPG/JPEG com `FF D8 FF`. DWG/RVT são validados apenas pela extensão. O arquivo recém-recebido é removido se o conteúdo for inválido ou a transação falhar.
+
+RN04: `nome` é o basename original, sem caracteres de controle, com trim e limitado a 150 caracteres. No mesmo projeto, nomes iguais sem diferenciar caixa recebem a maior versão existente mais um; nomes novos começam em 1. Cálculo e criação ocorrem na mesma transação, com lock por projeto para serializar uploads concorrentes. Registros e arquivos anteriores são preservados.
+
+Ausência ou nome incorreto do campo responde **400** `{message: "Envie o arquivo no campo 'arquivo'."}`. Extensão inválida: **400** `{message: "Tipo de arquivo não permitido. Aceitos: pdf, dwg, rvt, jpg, jpeg, png."}`. Conteúdo incompatível: **400** `{message: "O conteúdo do arquivo não corresponde ao tipo informado."}`. Excesso de tamanho: **413** `{message: "Arquivo maior que X MB."}`, com X igual ao limite configurado.
 
 ## Diário de Obra
 

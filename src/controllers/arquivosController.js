@@ -1,7 +1,18 @@
-function enviar(req, res) {
-  res.status(501).json({
-    message: 'Upload de arquivos ainda não implementado.',
-  });
+const arquivosService = require('../services/arquivosService');
+
+async function verificarProjeto(req, res, next) {
+  await arquivosService.verificarProjeto(req.params.id, req.usuario.sub);
+  return next();
 }
 
-module.exports = { enviar };
+async function enviar(req, res) {
+  const arquivo = await arquivosService.criar(req.params.id, req.file);
+  return res.status(201).json(arquivo);
+}
+
+async function listar(req, res) {
+  const arquivos = await arquivosService.listar(req.params.id);
+  return res.json(arquivos);
+}
+
+module.exports = { verificarProjeto, enviar, listar };
