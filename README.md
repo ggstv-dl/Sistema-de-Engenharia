@@ -168,6 +168,7 @@ Não há etapa de build: o projeto é JavaScript puro. Por padrão, a API estar�
 | POST | `/api/projetos` | Bearer token | Implementado |
 | PUT | `/api/projetos/:id` | Bearer token | Implementado |
 | POST | `/api/rdo/sync` | Bearer token | Implementado (201) |
+| GET | `/api/diarios` | Bearer token | Implementado; filtro opcional `?projetoId=<id>`; até 200 registros |
 | POST | `/api/projetos/:id/arquivos` | Bearer token | 501, ainda não implementado |
 | POST | `/api/whatsapp/enviar-orcamento` | Bearer token | 501, ainda não implementado |
 

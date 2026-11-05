@@ -46,4 +46,22 @@ async function criar(dados, engenheiroId) {
   });
 }
 
-module.exports = { criar };
+/**
+ * Lista até 200 diários do engenheiro autenticado, dos mais recentes aos mais antigos.
+ * @param {string} engenheiroId - Identificador do token autenticado
+ * @param {string} [projetoId] - Filtro opcional por projeto do mesmo engenheiro
+ * @returns {Promise<object[]>} Diários com projeto e engenheiro embutidos
+ */
+async function listar(engenheiroId, projetoId) {
+  return prisma.diarioObra.findMany({
+    where: {
+      engenheiroId,
+      ...(projetoId ? { projetoId, projeto: { engenheiroId } } : {}),
+    },
+    select: camposDiario,
+    orderBy: [{ data: 'desc' }, { criadoEm: 'desc' }],
+    take: 200,
+  });
+}
+
+module.exports = { criar, listar };

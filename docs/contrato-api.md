@@ -1,6 +1,6 @@
 # Contrato da API do MVP
 
-Este é o contrato alvo. Auth, raiz, health, dashboard, clientes, projetos (listar, criar e editar) e sync do RDO já existem. Upload e WhatsApp continuam respondendo **501** após autenticação; os demais endpoints abaixo ainda serão implementados.
+Este é o contrato alvo. Auth, raiz, health, dashboard, clientes, projetos (listar, criar e editar), sync do RDO e listagem de diários já existem. Upload e WhatsApp continuam respondendo **501** após autenticação; os demais endpoints abaixo ainda serão implementados.
 
 ## Regras gerais
 
@@ -68,7 +68,9 @@ Diário retornado: `{id, projetoId, data, atividade, clima, descricao, observaco
 | Método e rota | Autenticação | Corpo | Sucesso | Erros |
 |---|---|---|---|---|
 | `POST /api/rdo/sync` | Bearer | `{projetoId, data, atividade?, descricao, observacoes?, clima?, maoDeObra?: [{funcao, qtd}], equipamentos?: [{nome, qtd}], fotos?: string[]}` | **201** diário no formato acima; `engenheiroId = token.sub`; fotos omitidas resultam em `[]` | **400** dados/data/listas inválidos; **404** projeto inacessível; 401, 500 |
-| `GET /api/diarios` | Bearer | Nenhum | **200** lista de diários do engenheiro logado, com todos os campos acima e `projeto: {id, titulo}`, `engenheiro: {id, nome}`, ordenada por `data` decrescente e depois `criadoEm` decrescente | 401, 500 |
+| `GET /api/diarios` | Bearer | Nenhum; query opcional `?projetoId=<id>` | **200** até 200 diários do engenheiro logado no formato acima, ordenados por `data` decrescente e depois `criadoEm` decrescente | **400** query `projetoId` vazia ou de tipo inválido; 401, 500 |
+
+O filtro `projetoId` sempre mantém o dono do diário e do projeto. Projeto inexistente ou de outro engenheiro retorna **200** `[]` nessa listagem, sem expor sua existência; isso é uma exceção à regra geral de **404** para operações vinculadas a um projeto.
 
 No sync, `projetoId` deve ser uma string não vazia; `descricao`, após trim, deve ter de 3 a 5000 caracteres. `atividade`, `clima` e `observacoes` aceitam strings de até 200, 100 e 2000 caracteres, respectivamente. Campos opcionais omitidos são persistidos como `null`, exceto `fotos`, cujo padrão é `[]`; `null` explícito não substitui os tipos de entrada esperados.
 
