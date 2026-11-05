@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { login, registrar } from "../services/authService";
 import { useHighContrast } from "../hooks/useHighContrast";
+import logoAzul from "../assets/logo-principal-azul.png";
 import "../styles/login.css";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -96,8 +97,8 @@ export default function Login({ onSuccess }) {
       </button>
 
       <section className="login-card" aria-labelledby="login-title">
-        <div className="logo" aria-hidden="true">
-          co
+        <div className="logo">
+          <img className="logo-img" src={logoAzul} alt="Leandro Barros - Engenheiro Civil" />
         </div>
 
         <div className="tabs" role="tablist" aria-label="Acesso">

@@ -1,0 +1,207 @@
+/* Identidade visual Leandro Barros (azul #1A2238, dourado #AF9069, off-white #F2F1E9).
+   Este arquivo é carregado por ÚLTIMO (App.jsx) e só troca cores, fonte e logo.
+   Para mudar a cara do sistema, mexa aqui. O alto contraste (preto/branco/amarelo)
+   continua valendo e não é afetado pelas cores abaixo.
+   Dourado só em fundos e linhas: sobre o off-white ele não tem contraste para texto. */
+
+:root {
+  --bg: #f2f1e9;
+  --card: #fbfaf6;
+  --text: #1a2238;
+  --muted: #4b5368;
+  --primary: #1a2238;
+  --primary-text: #f2f1e9;
+  --border: #dad5c4;
+  --border-input: #6c7286;
+  --surface-2: #e8e5d8;
+  --tab-bg: #e8e5d8;
+  --tab-active-bg: #fbfaf6;
+  --tab-active-text: #1a2238;
+  --focus: #9b7842;
+  --ouro: linear-gradient(135deg, #c1a678, #eee3c7);
+  --nav-active-bg: #c1a678;
+  --nav-active-text: #1a2238;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: Montserrat, Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Alto contraste: mantém as cores de login.css/app.css (preto, branco e amarelo) */
+:root[data-contrast="high"] {
+  --bg: #000000;
+  --card: #000000;
+  --text: #ffffff;
+  --muted: #ffffff;
+  --primary: #ffd400;
+  --primary-text: #000000;
+  --border: #ffffff;
+  --border-input: #ffffff;
+  --surface-2: #333333;
+  --tab-bg: #000000;
+  --tab-active-bg: #ffd400;
+  --tab-active-text: #000000;
+  --focus: #00e5ff;
+  --nav-active-bg: #ffd400;
+  --nav-active-text: #000000;
+}
+
+/* ---------- Logos ---------- */
+.sidebar .brand,
+.login-card .logo {
+  width: auto;
+  height: auto;
+  background: none;
+  border-radius: 0;
+}
+
+.sidebar .brand {
+  margin: 0 4px;
+}
+
+.login-card .logo {
+  margin: 0 auto 16px;
+}
+
+.brand-img {
+  display: block;
+  width: 100%;
+  max-width: 190px;
+  height: auto;
+}
+
+.logo-img {
+  display: block;
+  width: 210px;
+  max-width: 100%;
+  height: auto;
+}
+
+/* No alto contraste a logo fica toda branca, para aparecer no fundo preto */
+:root[data-contrast="high"] .brand-img,
+:root[data-contrast="high"] .logo-img {
+  filter: brightness(0) invert(1);
+}
+
+/* ---------- Páginas ---------- */
+.page-header h1 {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.page-header h1::after {
+  content: "";
+  display: block;
+  width: 52px;
+  height: 3px;
+  margin-top: 8px;
+  background: linear-gradient(90deg, #9b7842, #c1a678, #eee3c7);
+  border-radius: 2px;
+}
+
+:root:not([data-contrast="high"]) .card {
+  box-shadow: 0 1px 2px rgba(26, 34, 56, 0.06);
+}
+
+:root:not([data-contrast="high"]) .btn-primary {
+  border-color: #af9069;
+  box-shadow: inset 0 -2px 0 #af9069;
+}
+
+:root:not([data-contrast="high"]) .tabela th {
+  color: #1a2238;
+  background: #efebdd;
+}
+
+:root:not([data-contrast="high"]) .chip[aria-pressed="true"] {
+  border-color: #af9069;
+}
+
+:root:not([data-contrast="high"]) .stepper li[aria-current="step"] .passo-num {
+  color: #1a2238;
+  background: var(--ouro);
+  border-color: #af9069;
+}
+
+/* ---------- Menu lateral azul ---------- */
+:root:not([data-contrast="high"]) .sidebar {
+  background: #1a2238;
+  border-right: 0;
+}
+
+:root:not([data-contrast="high"]) .nav-link {
+  color: #e4e1d3;
+}
+
+:root:not([data-contrast="high"]) .nav-link:hover {
+  background: rgba(242, 241, 233, 0.1);
+}
+
+:root:not([data-contrast="high"]) .nav-link.active {
+  color: #1a2238;
+  background: var(--ouro);
+}
+
+:root:not([data-contrast="high"]) .sidebar-footer {
+  border-top-color: rgba(193, 166, 120, 0.35);
+}
+
+:root:not([data-contrast="high"]) .sidebar .user-name {
+  color: #f2f1e9;
+}
+
+:root:not([data-contrast="high"]) .sidebar .user-role {
+  color: #c9c5b4;
+}
+
+:root:not([data-contrast="high"]) .sidebar .avatar {
+  color: #1a2238;
+  background: var(--ouro);
+}
+
+:root:not([data-contrast="high"]) .sidebar .logout {
+  color: #f2f1e9;
+  border-color: #af9069;
+}
+
+:root:not([data-contrast="high"]) .contrast-switch {
+  color: #f2f1e9;
+  background: transparent;
+  border-color: #af9069;
+}
+
+/* ---------- Login: fundo azul, cartão off-white ---------- */
+:root:not([data-contrast="high"]) .login-page {
+  background: #1a2238;
+}
+
+:root:not([data-contrast="high"]) .login-card {
+  background: #f2f1e9;
+  border: 0;
+  border-top: 4px solid #af9069;
+}
+
+:root:not([data-contrast="high"]) .tab[aria-selected="true"] {
+  color: #1a2238;
+  background: var(--ouro);
+}
+
+/* ---------- Celular ---------- */
+.sidebar .brand {
+  place-items: start;
+}
+
+@media (max-width: 800px) {
+  /* minmax(0, ...) impede que o menu de abas alargue a página além da tela */
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .brand-img {
+    max-width: 150px;
+  }
+}
