@@ -60,7 +60,8 @@ Integração planejada para facilitar o envio de orçamentos e documentos aos cl
 | Dotenv | Gerenciamento de variáveis de ambiente |
 | CORS | Controle de requisições entre diferentes origens |
 | Nodemon | Reinicialização automática durante o desenvolvimento |
-| Multer e PDFKit | Planejados para upload de arquivos e geração de PDF (ainda não instalados) |
+| Multer | Recebimento de arquivos multipart |
+| PDFKit | Planejado para geração de PDF (ainda não instalado) |
 
 ## 5. Requisitos para Execução
 
@@ -134,7 +135,7 @@ Todas as variáveis ficam no arquivo `.env` (modelo em `.env.example`):
 | `JWT_SECRET` | Segredo do token (obrigatório) | sem padrão |
 | `JWT_EXPIRES_IN` | Validade do token | `8h` |
 | `CORS_ORIGIN` | Origem permitida (aceita várias, separadas por vírgula) | `http://localhost:5173` |
-| `UPLOAD_DIR`, `MAX_FILE_SIZE_MB` | Upload de arquivos (ainda não implementado) | |
+| `UPLOAD_DIR`, `MAX_FILE_SIZE_MB` | Diretório de upload (resolvido a partir da raiz de execução) e limite por arquivo em MB; limites inválidos usam 10 | `uploads`, `10` |
 | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_API_URL` | Integração com WhatsApp (ainda não implementada) | |
 
 **Importante:** não compartilhe credenciais e nunca envie o arquivo `.env` ao repositório.
@@ -173,6 +174,8 @@ Não há etapa de build: o projeto é JavaScript puro. Por padrão, a API estar�
 | POST | `/api/whatsapp/enviar-orcamento` | Bearer token | 501, ainda não implementado |
 
 Rotas inexistentes respondem 404 em JSON. Erros respondem sempre no formato `{ "message": "..." }`.
+
+No MVP, `GET /uploads/<nome>` é público, sem token, para permitir fotos em `<img>`. O acesso depende do nome aleatório em UUID; quem conhece o caminho pode baixar o arquivo. Somente `/uploads` envia `Cross-Origin-Resource-Policy: cross-origin`; a API mantém o padrão do Helmet. JPG, JPEG e PNG são exibidos inline; os demais tipos são enviados como attachment. O diretório é criado na inicialização e seu conteúdo não é versionado no Git.
 
 ## 10. Exemplos de Requisições
 
