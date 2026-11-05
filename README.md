@@ -60,7 +60,8 @@ Integração planejada para facilitar o envio de orçamentos e documentos aos cl
 | Dotenv | Gerenciamento de variáveis de ambiente |
 | CORS | Controle de requisições entre diferentes origens |
 | Nodemon | Reinicialização automática durante o desenvolvimento |
-| Multer e PDFKit | Planejados para upload de arquivos e geração de PDF (ainda não instalados) |
+| Multer | Recebimento de arquivos multipart |
+| PDFKit | Planejado para geração de PDF (ainda não instalado) |
 
 ## 5. Requisitos para Execução
 
@@ -134,7 +135,7 @@ Todas as variáveis ficam no arquivo `.env` (modelo em `.env.example`):
 | `JWT_SECRET` | Segredo do token (obrigatório) | sem padrão |
 | `JWT_EXPIRES_IN` | Validade do token | `8h` |
 | `CORS_ORIGIN` | Origem permitida (aceita várias, separadas por vírgula) | `http://localhost:5173` |
-| `UPLOAD_DIR`, `MAX_FILE_SIZE_MB` | Upload de arquivos (ainda não implementado) | |
+| `UPLOAD_DIR`, `MAX_FILE_SIZE_MB` | Diretório de upload (resolvido a partir da raiz de execução) e limite por arquivo em MB; limites inválidos usam 10 | `uploads`, `10` |
 | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_API_URL` | Integração com WhatsApp (ainda não implementada) | |
 
 **Importante:** não compartilhe credenciais e nunca envie o arquivo `.env` ao repositório.
@@ -169,10 +170,13 @@ Não há etapa de build: o projeto é JavaScript puro. Por padrão, a API estar�
 | PUT | `/api/projetos/:id` | Bearer token | Implementado |
 | POST | `/api/rdo/sync` | Bearer token | Implementado (201) |
 | GET | `/api/diarios` | Bearer token | Implementado; filtro opcional `?projetoId=<id>`; até 200 registros |
-| POST | `/api/projetos/:id/arquivos` | Bearer token | 501, ainda não implementado |
+| POST | `/api/projetos/:id/arquivos` | Bearer token | Implementado (201); upload versionado |
+| GET | `/api/projetos/:id/arquivos` | Bearer token | Implementado; lista todas as versões |
 | POST | `/api/whatsapp/enviar-orcamento` | Bearer token | 501, ainda não implementado |
 
 Rotas inexistentes respondem 404 em JSON. Erros respondem sempre no formato `{ "message": "..." }`.
+
+No MVP, `GET /uploads/<nome>` é público, sem token, para permitir fotos em `<img>`. O acesso depende do nome aleatório em UUID; quem conhece o caminho pode baixar o arquivo. Somente `/uploads` envia `Cross-Origin-Resource-Policy: cross-origin`; a API mantém o padrão do Helmet. JPG, JPEG e PNG são exibidos inline; os demais tipos são enviados como attachment. O diretório é criado na inicialização e seu conteúdo não é versionado no Git.
 
 ## 10. Exemplos de Requisições
 
@@ -218,12 +222,15 @@ curl -X POST http://localhost:3000/api/rdo/sync \
   }'
 ```
 
-### 10.5. Enviar um arquivo para um projeto (501)
+### 10.5. Enviar um arquivo para um projeto
 
 ```bash
 curl -X POST http://localhost:3000/api/projetos/<id-do-projeto>/arquivos \
+  -H "Authorization: Bearer <token>" \
   -F "arquivo=@caminho/do/arquivo.pdf"
 ```
+
+Aceita PDF, DWG, RVT, JPG, JPEG e PNG, com limite padrão de 10 MB por arquivo. PDF e imagens têm a assinatura inicial conferida. Mesmo nome no mesmo projeto, sem diferenciar maiúsculas, cria uma nova versão; uploads anteriores são preservados. A listagem devolve nome em ordem alfabética e versões decrescentes por nome.
 
 ### 10.6. Solicitar orçamento via WhatsApp (501)
 
@@ -236,7 +243,7 @@ curl -X POST http://localhost:3000/api/whatsapp/enviar-orcamento \
   }'
 ```
 
-Os endpoints de upload e WhatsApp ainda respondem 501 após autenticação; seus corpos acima indicam o formato previsto.
+O endpoint de WhatsApp ainda responde 501 após autenticação; seu corpo acima indica o formato previsto.
 
 ## 11. Estrutura do Projeto
 
