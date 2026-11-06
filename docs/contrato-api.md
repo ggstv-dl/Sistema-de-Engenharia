@@ -1,6 +1,6 @@
 # Contrato da API do MVP
 
-Este é o contrato alvo. Auth, raiz, health, dashboard, clientes, projetos (listar, criar e editar), sync do RDO, listagem de diários e arquivos (upload versionado e listagem) já existem. WhatsApp continua respondendo **501** após autenticação; os demais endpoints abaixo ainda serão implementados.
+Este documento descreve o comportamento implementado; funcionalidades futuras estão identificadas nas seções correspondentes. Auth, raiz, health, dashboard, clientes, projetos (listar, criar e editar), sync do RDO, listagem de diários e arquivos (upload versionado e listagem) já existem. WhatsApp continua respondendo **501** após autenticação; os demais endpoints abaixo ainda serão implementados.
 
 ## Regras gerais
 
@@ -8,7 +8,7 @@ Este é o contrato alvo. Auth, raiz, health, dashboard, clientes, projetos (list
 - No MVP, `GET /uploads/<uuid>.<ext>` é público, protegido pelo nome aleatório. Retorna `Cross-Origin-Resource-Policy: cross-origin`; JPG/JPEG/PNG ficam inline e os demais arquivos são baixados como attachment.
 - JSON em requisições e respostas, exceto upload multipart. Erros: `{ "message": "..." }`. Datas em ISO 8601; campos seguem `schema.prisma`. `?` indica entrada opcional; campos opcionais do banco podem retornar `null`.
 - Rotas protegidas: **401** se o token estiver ausente, inválido ou expirado. Dados inválidos: **400**; falhas internas: **500**, com mensagem genérica. Erros específicos constam abaixo.
-- Um projeto só pode ser lido ou alterado se `projeto.engenheiroId === token.sub`. Projeto inexistente ou de outro engenheiro: **404**, inclusive em operações de arquivos, diários, orçamentos e WhatsApp vinculadas a ele. Listagens filtram pelo dono.
+- Um projeto só pode ser lido ou alterado se `projeto.engenheiroId === token.sub`. Projeto inexistente ou de outro engenheiro: **404**, inclusive em operações implementadas de arquivos e criação de diários. A rota stub de WhatsApp não consulta propriedade; após autenticação retorna 501. Listagens filtram pelo dono.
 - IDs, vínculos, versões e datas de criação são definidos pelo servidor. Não aceitar `engenheiroId` do corpo como autorização.
 
 ## Rotas existentes de suporte
@@ -34,12 +34,14 @@ No registro, `nome` é string de 2 a 100 caracteres após trim; `email` tem form
 
 ## Clientes
 
-Cliente: `{id, nome, email, telefone, criadoEm}`. O schema não vincula clientes a um engenheiro; a restrição de propriedade aplica-se aos projetos.
+Cliente criado: `{id, nome, email, telefone, criadoEm}`. Na listagem, cada item contém somente `{id, nome, email, telefone}`; `criadoEm` não é selecionado. O schema não vincula clientes a um engenheiro; a restrição de propriedade aplica-se aos projetos.
 
 | Método e rota | Autenticação | Corpo | Sucesso | Erros |
 |---|---|---|---|---|
-| `GET /api/clientes` | Bearer | Nenhum | **200** lista de clientes | 401, 500 |
+| `GET /api/clientes` | Bearer | Nenhum | **200** lista de `{id, nome, email, telefone}` | 401, 500 |
 | `POST /api/clientes` | Bearer | `{nome, email, telefone}` | **201** cliente criado | **400** dados inválidos; **409** e-mail já cadastrado; 401, 500 |
+
+No cadastro, `nome` tem de 2 a 100 caracteres após trim; `email` é normalizado com trim e minúsculas, deve ter formato válido e até 254 caracteres. `telefone` é obrigatório, deve ser string e conter de 10 a 13 dígitos; a formatação informada é preservada após trim.
 
 ## Projetos
 
@@ -86,22 +88,17 @@ No sync, `projetoId` deve ser uma string não vazia; `descricao`, após trim, de
 
 `fotos` contém até 10 caminhos de até 255 caracteres, começando com `/uploads/` e sem `..`. O sync valida o formato dos caminhos, sem verificar a existência física dos arquivos. `maoDeObra` e `equipamentos` aceitam até 30 objetos cada; `funcao`/`nome`, após trim, devem ter de 1 a 60 caracteres, e `qtd` deve ser um inteiro de 1 a 1000. Erros de validação identificam o campo inválido.
 
-## Orçamentos
+## Orçamentos — previsto, ainda não implementado
 
-Orçamento: `{id, nome, descricao, valor, dataCriacao, projetoId, criadoEm}`.
+Não existem rotas GET/POST `/api/projetos/:id/orcamentos`. Com token válido, essas requisições retornam **404** `{message: "Rota não encontrada."}`. O modelo Prisma e os dados do seed não constituem uma API de orçamento. Esta seção não define resposta 200/201 como comportamento atual.
 
-| Método e rota | Autenticação | Corpo | Sucesso | Erros |
+## WhatsApp — previsto, ainda não implementado
+
+| Método e rota existente | Autenticação | Corpo | Resposta atual | Erros |
 |---|---|---|---|---|
-| `POST /api/projetos/:id/orcamentos` | Bearer | `{nome, descricao?, valor}` | **201** orçamento criado | **400** dados inválidos; **404** projeto inacessível; 401, 500 |
-| `GET /api/projetos/:id/orcamentos` | Bearer | Nenhum | **200** lista de orçamentos do projeto | **404** projeto inacessível; 401, 500 |
+| `POST /api/whatsapp/enviar-orcamento` | Bearer | Ignorado pelo stub | **501** `{message: "Integração com WhatsApp ainda não implementada."}` | **401** token ausente/inválido/expirado |
 
-## WhatsApp
-
-| Método e rota | Autenticação | Corpo | Sucesso | Erros |
-|---|---|---|---|---|
-| `POST /api/whatsapp/enviar-orcamento` | Bearer | `{orcamentoId}` | **200** `{modo: "simulado" ou "cloud", status, link?}` | **400** dados/telefone inválidos; **404** orçamento inexistente ou projeto inacessível; **502** falha no provedor; 401, 500; atualmente 501 |
-
-O telefone vem de `orcamento.projeto.cliente.telefone`, nunca do corpo. `modo` identifica simulação ou envio Cloud; `status` descreve o resultado e `link` é opcional.
+Não há provider simulado no servidor, envio Cloud, normalização de telefone ou busca de orçamento implementados nessa rota. A autenticação ocorre antes da resposta 501. A coleção Postman exclui esse endpoint e os endpoints inexistentes.
 
 ## Divergências a corrigir no front
 
