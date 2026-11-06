@@ -1,0 +1,1243 @@
+{
+  "info": {
+    "name": "CRM Engenharia — TED 03",
+    "description": "Execução sequencial contra a API real. Requer seed de João e Maria. Cria usuários, clientes, projetos, diários e arquivos de teste; não os apaga. Configure o working directory como docs/postman para os uploads. IDs e tokens são obtidos durante a execução.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "execucaoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "emailRegistro",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "emailCliente",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clienteInexistenteId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dataHoje",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dataFutura",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Saúde",
+      "item": [
+        {
+          "name": "Raiz da API",
+          "request": {
+            "method": "GET",
+            "description": "Consulta pública da identificação da API, sem corpo. Espera 200 com mensagem e status online.",
+            "header": [],
+            "url": "{{baseUrl}}/",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const execucao = pm.variables.replaceIn(\"{{$timestamp}}\") + \".\" + pm.variables.replaceIn(\"{{$randomUUID}}\");",
+                  "pm.collectionVariables.set(\"execucaoId\", execucao);",
+                  "pm.collectionVariables.set(\"emailRegistro\", \"registro.\" + execucao + \"@example.com\");",
+                  "pm.collectionVariables.set(\"emailCliente\", \"cliente.\" + execucao + \"@example.com\");",
+                  "pm.collectionVariables.set(\"clienteInexistenteId\", pm.variables.replaceIn(\"{{$randomUUID}}\"));",
+                  "for (const chave of [\"token\", \"tokenOutro\", \"clienteId\", \"projetoId\", \"projetoOutroId\", \"diarioId\", \"arquivoId\"]) pm.environment.set(chave, \"\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"API identificada\", () => { const c = pm.response.json(); pm.expect(c.mensagem).to.be.a(\"string\"); pm.expect(c.status).to.eql(\"online\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Saúde da API e do banco",
+          "request": {
+            "method": "GET",
+            "description": "Consulta pública sem corpo. Espera 200 com api online e banco conectado; banco indisponível retorna 503.",
+            "header": [],
+            "url": "{{baseUrl}}/api/health",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Banco conectado\", () => pm.expect(pm.response.json()).to.eql({api:\"online\", banco:\"conectado\"}));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Autenticação",
+      "item": [
+        {
+          "name": "Registrar usuário com e-mail único",
+          "request": {
+            "method": "POST",
+            "description": "Cria engenheiro com nome, email único gerado com {{$timestamp}} e UUID, e senha de pelo menos oito caracteres. Retorna 201 com message e usuario; erros 400/409.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/registro",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Usuário TED 03\",\n  \"email\": \"{{emailRegistro}}\",\n  \"senha\": \"TesteTED03!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Usuário público\", () => { const c = pm.response.json(); pm.expect(c.usuario).to.include.all.keys(\"id\", \"nome\", \"email\", \"perfil\"); pm.expect(c.usuario).not.to.have.property(\"senha\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login do João",
+          "request": {
+            "method": "POST",
+            "description": "Autentica com email e senha do ambiente. Retorna 200 com message, token e usuario; erros 400/401. Guarda o token para as próximas requisições.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"senha\": \"{{senha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Usuário público\", () => { const c = pm.response.json(); pm.expect(c.usuario).to.include.all.keys(\"id\", \"nome\", \"email\", \"perfil\"); pm.expect(c.usuario).not.to.have.property(\"senha\"); });",
+                  "pm.test(\"JWT recebido\", () => pm.expect(pm.response.json().token).to.be.a(\"string\").and.not.empty);",
+                  "if (pm.response.code === 200) pm.environment.set(\"token\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login da Maria",
+          "request": {
+            "method": "POST",
+            "description": "Autentica com email e senha do ambiente. Retorna 200 com message, token e usuario; erros 400/401. Guarda o token para as próximas requisições.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailOutro}}\",\n  \"senha\": \"{{senhaOutro}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Usuário público\", () => { const c = pm.response.json(); pm.expect(c.usuario).to.include.all.keys(\"id\", \"nome\", \"email\", \"perfil\"); pm.expect(c.usuario).not.to.have.property(\"senha\"); });",
+                  "pm.test(\"JWT recebido\", () => pm.expect(pm.response.json().token).to.be.a(\"string\").and.not.empty);",
+                  "if (pm.response.code === 200) pm.environment.set(\"tokenOutro\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login com senha incorreta",
+          "request": {
+            "method": "POST",
+            "description": "Envia email válido e senha incorreta; espera 401 com message, sem token.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"senha\": \"incorreta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Mensagem de credenciais\", () => pm.expect(pm.response.json().message).to.eql(\"E-mail ou senha incorretos.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registro com e-mail repetido",
+          "request": {
+            "method": "POST",
+            "description": "Repete o email do primeiro cadastro desta execução; espera 409 com message.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/registro",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Usuário repetido\",\n  \"email\": \"{{emailRegistro}}\",\n  \"senha\": \"TesteTED03!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Clientes",
+      "item": [
+        {
+          "name": "Listar clientes",
+          "request": {
+            "method": "GET",
+            "description": "Lista global autenticada de clientes. Sem corpo; 200 com id, nome, email e telefone, sem criadoEm; 401 sem token.",
+            "header": [],
+            "url": "{{baseUrl}}/api/clientes"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Resposta em lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+                  "pm.test(\"Campos da listagem\", () => pm.response.json().forEach(c => pm.expect(c).to.have.all.keys(\"id\", \"nome\", \"email\", \"telefone\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar cliente",
+          "request": {
+            "method": "POST",
+            "description": "Cria cliente com nome, email único gerado com {{$timestamp}} e UUID, e telefone de 10 a 13 dígitos. Retorna 201; grava clienteId. Erros 400/409.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clientes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Cliente TED 03\",\n  \"email\": \"{{emailCliente}}\",\n  \"telefone\": \"(11) 99999-1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Cliente retornado\", () => pm.expect(pm.response.json()).to.include.all.keys(\"id\", \"nome\", \"email\", \"telefone\", \"criadoEm\"));",
+                  "if (pm.response.code === 201) pm.environment.set(\"clienteId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cliente com e-mail repetido",
+          "request": {
+            "method": "POST",
+            "description": "Repete o email do cliente desta execução; espera 409 com message.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clientes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Cliente TED 03\",\n  \"email\": \"{{emailCliente}}\",\n  \"telefone\": \"(11) 99999-1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cliente sem telefone",
+          "request": {
+            "method": "POST",
+            "description": "Omite telefone obrigatório; espera 400 com message. Nome e email são informados.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clientes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Sem telefone\",\n  \"email\": \"{{emailCliente}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Projetos",
+      "item": [
+        {
+          "name": "Listar projetos do João",
+          "request": {
+            "method": "GET",
+            "description": "Lista somente projetos do engenheiro do token. Sem corpo; espera 200 com relações cliente e engenheiro e ao menos um projeto do seed. Guarda o primeiro id; 401 sem token.",
+            "header": [],
+            "url": "{{baseUrl}}/api/projetos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Resposta em lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+                  "pm.test(\"Projeto disponível\", () => pm.expect(pm.response.json().length).to.be.above(0));",
+                  "if (pm.response.code === 200 && pm.response.json().length) pm.environment.set(\"projetoId\", pm.response.json()[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar projetos da Maria",
+          "request": {
+            "method": "GET",
+            "description": "Lista somente projetos do engenheiro do token. Sem corpo; espera 200 com relações cliente e engenheiro e ao menos um projeto do seed. Guarda o primeiro id; 401 sem token.",
+            "header": [],
+            "url": "{{baseUrl}}/api/projetos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenOutro}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Resposta em lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+                  "pm.test(\"Projeto disponível\", () => pm.expect(pm.response.json().length).to.be.above(0));",
+                  "if (pm.response.code === 200 && pm.response.json().length) pm.environment.set(\"projetoOutroId\", pm.response.json()[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar projeto isolado para os testes",
+          "request": {
+            "method": "POST",
+            "description": "Cria projeto do João com titulo, descricao opcional, status, prioridade e clienteId. Retorna 201 e substitui projetoId pelo novo projeto para não editar o seed. Erros 400/404.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projetos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Projeto TED 03 {{execucaoId}}\",\n  \"descricao\": \"Criado pela coleção de testes.\",\n  \"status\": \"planejamento\",\n  \"prioridade\": \"media\",\n  \"clienteId\": \"{{clienteId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Projeto com relações\", () => { const c = pm.response.json(); pm.expect(c).to.include.all.keys(\"id\", \"titulo\", \"status\", \"prioridade\", \"criadoEm\", \"atualizadoEm\", \"cliente\", \"engenheiro\"); pm.expect(c.cliente).to.have.property(\"id\"); pm.expect(c.engenheiro).to.have.property(\"id\"); });",
+                  "if (pm.response.code === 201) pm.environment.set(\"projetoId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Projeto com status inválido",
+          "request": {
+            "method": "POST",
+            "description": "Envia todos os campos obrigatórios, mas status fora do domínio; espera 400 com message.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projetos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Projeto TED 03 {{execucaoId}}\",\n  \"descricao\": \"Criado pela coleção de testes.\",\n  \"status\": \"invalido\",\n  \"prioridade\": \"media\",\n  \"clienteId\": \"{{clienteId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Projeto com cliente inexistente",
+          "request": {
+            "method": "POST",
+            "description": "Envia clienteId UUID gerado que não existe; demais campos válidos. Espera 404 Cliente não encontrado.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projetos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Projeto TED 03 {{execucaoId}}\",\n  \"descricao\": \"Criado pela coleção de testes.\",\n  \"status\": \"planejamento\",\n  \"prioridade\": \"media\",\n  \"clienteId\": \"{{clienteInexistenteId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar projeto do João",
+          "request": {
+            "method": "PUT",
+            "description": "Altera status para em_andamento no projeto recém-criado. Campos omitidos são preservados; espera 200. Erros 400/404.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"em_andamento\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Projeto com relações\", () => { const c = pm.response.json(); pm.expect(c).to.include.all.keys(\"id\", \"titulo\", \"status\", \"prioridade\", \"criadoEm\", \"atualizadoEm\", \"cliente\", \"engenheiro\"); pm.expect(c.cliente).to.have.property(\"id\"); pm.expect(c.engenheiro).to.have.property(\"id\"); });",
+                  "pm.test(\"Status alterado\", () => pm.expect(pm.response.json().status).to.eql(\"em_andamento\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar projeto da Maria com token do João",
+          "request": {
+            "method": "PUT",
+            "description": "Tenta alterar status de projeto de outro engenheiro; espera 404 Projeto não encontrado, sem revelar o dono.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projetos/{{projetoOutroId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"em_andamento\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar projeto com corpo vazio",
+          "request": {
+            "method": "PUT",
+            "description": "Envia objeto JSON vazio; espera 400 por ausência de campos reconhecidos.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Diário de Obra (RDO)",
+      "item": [
+        {
+          "name": "Criar diário de hoje",
+          "request": {
+            "method": "POST",
+            "description": "Cria diário com projetoId, data atual gerada antes da requisição, descricao, atividade, maoDeObra e fotos. Espera 201 com projeto/engenheiro e grava diarioId. O caminho de foto é validado sem exigir arquivo físico. Erros 400/404.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/rdo/sync",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projetoId\": \"{{projetoId}}\",\n  \"data\": \"{{dataHoje}}\",\n  \"descricao\": \"Registro de atividades criado pela coleção TED 03.\",\n  \"atividade\": \"Acompanhamento da obra\",\n  \"maoDeObra\": [\n    {\n      \"funcao\": \"Pedreiro\",\n      \"qtd\": 2\n    }\n  ],\n  \"fotos\": [\n    \"/uploads/exemplo.jpg\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"dataHoje\", new Date().toISOString());",
+                  "pm.collectionVariables.set(\"dataFutura\", new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Diário com relações\", () => { const c = pm.response.json(); pm.expect(c).to.include.all.keys(\"id\", \"projetoId\", \"data\", \"descricao\", \"maoDeObra\", \"fotos\", \"projeto\", \"engenheiro\"); pm.expect(c.projeto.id).to.eql(pm.environment.get(\"projetoId\")); });",
+                  "if (pm.response.code === 201) pm.environment.set(\"diarioId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Diário em projeto de outro engenheiro",
+          "request": {
+            "method": "POST",
+            "description": "Corpo válido, com projetoId da Maria e token do João. Espera 404 Projeto não encontrado.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/rdo/sync",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projetoId\": \"{{projetoOutroId}}\",\n  \"data\": \"{{dataHoje}}\",\n  \"descricao\": \"Registro de atividades criado pela coleção TED 03.\",\n  \"atividade\": \"Acompanhamento da obra\",\n  \"maoDeObra\": [\n    {\n      \"funcao\": \"Pedreiro\",\n      \"qtd\": 2\n    }\n  ],\n  \"fotos\": [\n    \"/uploads/exemplo.jpg\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Diário com data futura",
+          "request": {
+            "method": "POST",
+            "description": "Usa timestamp de daqui a 48 horas para garantir data futura em qualquer fuso. Demais campos válidos; espera 400.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/rdo/sync",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projetoId\": \"{{projetoId}}\",\n  \"data\": \"{{dataFutura}}\",\n  \"descricao\": \"Registro de atividades criado pela coleção TED 03.\",\n  \"atividade\": \"Acompanhamento da obra\",\n  \"maoDeObra\": [\n    {\n      \"funcao\": \"Pedreiro\",\n      \"qtd\": 2\n    }\n  ],\n  \"fotos\": [\n    \"/uploads/exemplo.jpg\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Mensagem de data futura\", () => pm.expect(pm.response.json().message).to.eql(\"A data do diário não pode ser futura.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar diários",
+          "request": {
+            "method": "GET",
+            "description": "Lista até 200 diários do engenheiro, ordenados por data e criadoEm decrescentes. Sem corpo; espera 200 e presença do diário criado. Filtro projetoId é opcional; erros 400/401.",
+            "header": [],
+            "url": "{{baseUrl}}/api/diarios"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Resposta em lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+                  "pm.test(\"Diário criado presente\", () => pm.expect(pm.response.json().some(d => d.id === pm.environment.get(\"diarioId\"))).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar diários do projeto",
+          "request": {
+            "method": "GET",
+            "description": "Lista até 200 diários do engenheiro, ordenados por data e criadoEm decrescentes. Sem corpo; espera 200 e presença do diário criado. Filtro projetoId é opcional; erros 400/401.",
+            "header": [],
+            "url": "{{baseUrl}}/api/diarios?projetoId={{projetoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Resposta em lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+                  "pm.test(\"Diário criado presente\", () => pm.expect(pm.response.json().some(d => d.id === pm.environment.get(\"diarioId\"))).to.eql(true));",
+                  "pm.test(\"Somente o projeto filtrado\", () => pm.response.json().forEach(d => pm.expect(d.projetoId).to.eql(pm.environment.get(\"projetoId\"))));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Arquivos",
+      "item": [
+        {
+          "name": "Upload PDF versão 1",
+          "request": {
+            "method": "POST",
+            "description": "Envia multipart no campo arquivo, usando amostra.pdf do working directory. Projeto novo garante versões 1 e 2; retorna 201 com id, nome, tipo, caminho e versao. Erros 400/404/413.",
+            "header": [],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}/arquivos",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "arquivo",
+                  "type": "file",
+                  "src": "amostra.pdf",
+                  "description": "Arquivo relativo ao working directory docs/postman."
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Arquivo versão 1\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"id\", \"nome\", \"tipo\", \"caminho\", \"versao\"); pm.expect(c.nome).to.eql(\"amostra.pdf\"); pm.expect(c.tipo).to.eql(\"pdf\"); pm.expect(c.versao).to.eql(1); pm.expect(c.caminho).to.match(/^\\/uploads\\/[0-9a-f-]+\\.pdf$/); });",
+                  "if (pm.response.code === 201) pm.environment.set(\"arquivoId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload PDF versão 2",
+          "request": {
+            "method": "POST",
+            "description": "Envia multipart no campo arquivo, usando amostra.pdf do working directory. Projeto novo garante versões 1 e 2; retorna 201 com id, nome, tipo, caminho e versao. Erros 400/404/413.",
+            "header": [],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}/arquivos",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "arquivo",
+                  "type": "file",
+                  "src": "amostra.pdf",
+                  "description": "Arquivo relativo ao working directory docs/postman."
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Arquivo versão 2\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"id\", \"nome\", \"tipo\", \"caminho\", \"versao\"); pm.expect(c.nome).to.eql(\"amostra.pdf\"); pm.expect(c.tipo).to.eql(\"pdf\"); pm.expect(c.versao).to.eql(2); pm.expect(c.caminho).to.match(/^\\/uploads\\/[0-9a-f-]+\\.pdf$/); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar versões de arquivos",
+          "request": {
+            "method": "GET",
+            "description": "Lista arquivos do projeto, por nome sem diferenciar caixa e versão decrescente. Sem corpo; espera 200 com as versões 2 e 1 e criadoEm. Erros 401/404.",
+            "header": [],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}/arquivos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Resposta em lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+                  "pm.test(\"Versões e arquivo anterior preservados\", () => { const c = pm.response.json(); pm.expect(c.filter(a => a.nome === \"amostra.pdf\").map(a => a.versao)).to.eql([2,1]); pm.expect(c.some(a => a.id === pm.environment.get(\"arquivoId\"))).to.eql(true); c.forEach(a => pm.expect(a).to.have.property(\"criadoEm\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload em projeto de outro engenheiro",
+          "request": {
+            "method": "POST",
+            "description": "Tenta enviar amostra.pdf ao projeto da Maria com token do João. Espera 404 antes da gravação em disco.",
+            "header": [],
+            "url": "{{baseUrl}}/api/projetos/{{projetoOutroId}}/arquivos",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "arquivo",
+                  "type": "file",
+                  "src": "amostra.pdf",
+                  "description": "Arquivo relativo ao working directory docs/postman."
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload com extensão não permitida",
+          "request": {
+            "method": "POST",
+            "description": "Envia o JSON da própria coleção como arquivo no campo arquivo. A extensão .json é rejeitada antes de gravar, retornando 400; não é necessário outro arquivo de teste.",
+            "header": [],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}/arquivos",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "arquivo",
+                  "type": "file",
+                  "src": "crm-engenharia.postman_collection.json",
+                  "description": "Arquivo relativo ao working directory docs/postman."
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Extensão rejeitada\", () => pm.expect(pm.response.json().message).to.eql(\"Tipo de arquivo não permitido. Aceitos: pdf, dwg, rvt, jpg, jpeg, png.\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Dashboard",
+      "item": [
+        {
+          "name": "Resumo do engenheiro",
+          "request": {
+            "method": "GET",
+            "description": "Consulta indicadores e atividades do engenheiro autenticado. Sem corpo; espera 200 com obrasAtivas, diariosPendentes, custoTotal, eficiencia, progressoObras e atividades; 401 sem token.",
+            "header": [],
+            "url": "{{baseUrl}}/api/dashboard"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Formato do dashboard\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"obrasAtivas\", \"diariosPendentes\", \"custoTotal\", \"eficiencia\", \"progressoObras\", \"atividades\"); pm.expect(c.obrasAtivas.valor).to.be.a(\"number\"); pm.expect(c.atividades).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Segurança",
+      "item": [
+        {
+          "name": "Clientes sem token",
+          "request": {
+            "method": "GET",
+            "description": "Desativa explicitamente a autenticação herdada com No Auth. Espera 401 com message; o corpo, quando presente, contém os campos válidos do RDO.",
+            "header": [],
+            "url": "{{baseUrl}}/api/clientes",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Autenticação exigida\", () => pm.expect(pm.response.json().message).to.eql(\"Autenticação necessária.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Projetos sem token",
+          "request": {
+            "method": "GET",
+            "description": "Desativa explicitamente a autenticação herdada com No Auth. Espera 401 com message; o corpo, quando presente, contém os campos válidos do RDO.",
+            "header": [],
+            "url": "{{baseUrl}}/api/projetos",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Autenticação exigida\", () => pm.expect(pm.response.json().message).to.eql(\"Autenticação necessária.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "RDO sem token",
+          "request": {
+            "method": "POST",
+            "description": "Desativa explicitamente a autenticação herdada com No Auth. Espera 401 com message; o corpo, quando presente, contém os campos válidos do RDO.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/rdo/sync",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projetoId\": \"{{projetoId}}\",\n  \"data\": \"{{dataHoje}}\",\n  \"descricao\": \"Registro de atividades criado pela coleção TED 03.\",\n  \"atividade\": \"Acompanhamento da obra\",\n  \"maoDeObra\": [\n    {\n      \"funcao\": \"Pedreiro\",\n      \"qtd\": 2\n    }\n  ],\n  \"fotos\": [\n    \"/uploads/exemplo.jpg\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Autenticação exigida\", () => pm.expect(pm.response.json().message).to.eql(\"Autenticação necessária.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Diários sem token",
+          "request": {
+            "method": "GET",
+            "description": "Desativa explicitamente a autenticação herdada com No Auth. Espera 401 com message; o corpo, quando presente, contém os campos válidos do RDO.",
+            "header": [],
+            "url": "{{baseUrl}}/api/diarios",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Autenticação exigida\", () => pm.expect(pm.response.json().message).to.eql(\"Autenticação necessária.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Arquivos sem token",
+          "request": {
+            "method": "GET",
+            "description": "Desativa explicitamente a autenticação herdada com No Auth. Espera 401 com message; o corpo, quando presente, contém os campos válidos do RDO.",
+            "header": [],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}/arquivos",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Autenticação exigida\", () => pm.expect(pm.response.json().message).to.eql(\"Autenticação necessária.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dashboard sem token",
+          "request": {
+            "method": "GET",
+            "description": "Desativa explicitamente a autenticação herdada com No Auth. Espera 401 com message; o corpo, quando presente, contém os campos válidos do RDO.",
+            "header": [],
+            "url": "{{baseUrl}}/api/dashboard",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Autenticação exigida\", () => pm.expect(pm.response.json().message).to.eql(\"Autenticação necessária.\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
