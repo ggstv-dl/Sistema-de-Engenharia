@@ -10,7 +10,8 @@
     "db:generate": "prisma generate",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "check": "node scripts/check.js"
+    "check": "node scripts/check.js",
+    "smoke": "node scripts/smoke.js"
   },
   "keywords": [],
   "author": "",
