@@ -94,8 +94,9 @@ Tabela extraída dos nomes e comandos existentes no `package.json` da raiz:
 | `npm run db:seed` | `prisma db seed` |
 | `npm run db:studio` | `prisma studio` |
 | `npm run check` | `node scripts/check.js` |
+| `npm run smoke` | `node scripts/smoke.js` |
 
-Não há atalho npm para o smoke no estado atual; execute o arquivo diretamente, como indicado abaixo. No front, os scripts existentes são `dev`, `build` e `preview`. O backend é JavaScript e não possui etapa de build.
+Execute o smoke com `npm run smoke` (equivalente a `node scripts/smoke.js`). No front, os scripts existentes são `dev`, `build` e `preview`. O backend é JavaScript e não possui etapa de build.
 
 ## Estrutura atual
 
@@ -154,7 +155,7 @@ Com banco, API e contas do seed disponíveis:
 
 ```bash
 npm run check
-node scripts/smoke.js
+npm run smoke
 ```
 
 O smoke usa apenas recursos nativos de Node: fetch, FormData e Blob. Sua URL vem de `SMOKE_BASE_URL`, com padrão `http://localhost:3000`. Ele testa saúde, logins, cliente, projeto, edição, RDO, upload/versionamento, autorização e validações; imprime OK/FALHOU por passo e retorna código 1 se houver falha.
