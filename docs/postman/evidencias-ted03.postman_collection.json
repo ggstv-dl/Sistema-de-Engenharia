@@ -1,0 +1,395 @@
+{
+  "info": {
+    "name": "Evidências TED 03 — Figuras 13 e 14",
+    "description": "Use o ambiente local.postman_environment.json existente, com as contas de João e Maria. Execute manualmente as duas pastas em ordem, após npm run prints:preparar e npm run prints:check. A coleção consulta dados existentes e faz login; não cria registros de negócio. Não capture requisições de login nem exponha Authorization.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Figura 13 - Versionamento de arquivos",
+      "item": [
+        {
+          "name": "Login João",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.unset(\"token\");",
+                  "pm.environment.unset(\"projetoId\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Login de João retorna HTTP 200 e sessão válida\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const dados = pm.response.json();",
+                  "  pm.expect(dados.token).to.be.a(\"string\").and.not.empty;",
+                  "  pm.environment.set(\"token\", dados.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Preparação: autentique a conta, mas não capture esta requisição; corpo enviado e resposta contêm dados de autenticação. A orientação seguinte vale para as requisições de evidência. Deixe visíveis o método, a URL, o status e o corpo; esconda o cabeçalho Authorization.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"senha\": \"{{senha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Meus projetos",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.unset(\"projetoId\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Projeto de demonstração encontrado sem ambiguidade\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const projetos = pm.response.json();",
+                  "  pm.expect(projetos).to.be.an(\"array\");",
+                  "  const encontrados = projetos.filter((projeto) => projeto.titulo === \"Obra Demonstração TED 03\");",
+                  "  pm.expect(encontrados, \"Rode npm run prints:preparar antes das capturas\").to.have.lengthOf(1);",
+                  "  pm.expect(encontrados[0].id).to.be.a(\"string\").and.not.empty;",
+                  "  pm.environment.set(\"projetoId\", encontrados[0].id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projetos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "projetos"
+              ]
+            },
+            "description": "Preparação: selecione automaticamente a Obra Demonstração TED 03. O print da Figura 13 será a próxima requisição. Deixe visíveis o método, a URL, o status e o corpo; esconda o cabeçalho Authorization."
+          }
+        },
+        {
+          "name": "Listar arquivos do projeto — PRINT Figura 13",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"planta-demonstracao.pdf tem as versões 1 e 2\", () => {",
+                  "  const arquivos = pm.response.json();",
+                  "  pm.expect(arquivos).to.be.an(\"array\");",
+                  "  const versoes = arquivos.filter((arquivo) => arquivo.nome === \"planta-demonstracao.pdf\").map((arquivo) => arquivo.versao).sort((a, b) => a - b);",
+                  "  pm.expect(versoes).to.deep.equal([1, 2]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projetos/{{projetoId}}/arquivos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "projetos",
+                "{{projetoId}}",
+                "arquivos"
+              ]
+            },
+            "description": "Capture a Figura 13: mostre no JSON o mesmo nome de arquivo nas versões 1 e 2. Deixe visíveis o método, a URL, o status e o corpo; esconda o cabeçalho Authorization."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Figura 14 - Acesso negado",
+      "item": [
+        {
+          "name": "Login Maria",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.unset(\"tokenOutro\");",
+                  "pm.environment.unset(\"projetoOutroId\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Login de Maria retorna HTTP 200 e sessão válida\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const dados = pm.response.json();",
+                  "  pm.expect(dados.token).to.be.a(\"string\").and.not.empty;",
+                  "  pm.environment.set(\"tokenOutro\", dados.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Preparação: autentique a conta, mas não capture esta requisição; corpo enviado e resposta contêm dados de autenticação. A orientação seguinte vale para as requisições de evidência. Deixe visíveis o método, a URL, o status e o corpo; esconda o cabeçalho Authorization.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailOutro}}\",\n  \"senha\": \"{{senhaOutro}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Projetos da Maria",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.unset(\"projetoOutroId\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Maria possui projeto para demonstrar acesso negado\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const projetos = pm.response.json();",
+                  "  pm.expect(projetos).to.be.an(\"array\").and.not.empty;",
+                  "  pm.expect(projetos[0].id).to.be.a(\"string\").and.not.empty;",
+                  "  pm.environment.set(\"projetoOutroId\", projetos[0].id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenOutro}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projetos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "projetos"
+              ]
+            },
+            "description": "Preparação: obtenha um projeto da Maria sem substituir a sessão do João. Capture o 404 na próxima requisição. Deixe visíveis o método, a URL, o status e o corpo; esconda o cabeçalho Authorization."
+          }
+        },
+        {
+          "name": "João tenta listar arquivos do projeto da Maria — PRINT 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Acesso ao projeto de outro engenheiro retorna HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erro contém somente message\", () => {",
+                  "  const dados = pm.response.json();",
+                  "  pm.expect(dados).to.have.all.keys(\"message\");",
+                  "  pm.expect(dados.message).to.be.a(\"string\").and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projetos/{{projetoOutroId}}/arquivos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "projetos",
+                "{{projetoOutroId}}",
+                "arquivos"
+              ]
+            },
+            "description": "Capture a primeira parte da Figura 14: João consulta o projeto obtido com a conta da Maria e recebe 404. Deixe visíveis o método, a URL, o status e o corpo; esconda o cabeçalho Authorization."
+          }
+        },
+        {
+          "name": "Sem token — PRINT 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Ausência de autenticação retorna HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Erro contém somente message\", () => {",
+                  "  const dados = pm.response.json();",
+                  "  pm.expect(dados).to.have.all.keys(\"message\");",
+                  "  pm.expect(dados.message).to.be.a(\"string\").and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projetos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "projetos"
+              ]
+            },
+            "description": "Capture a segunda parte da Figura 14: mantenha Authorization em No Auth e mostre a resposta 401. Os prints 404 e 401 podem ser unidos lado a lado. Deixe visíveis o método, a URL, o status e o corpo; esconda o cabeçalho Authorization."
+          }
+        }
+      ]
+    }
+  ]
+}
