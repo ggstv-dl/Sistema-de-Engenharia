@@ -179,3 +179,8 @@ Os testes não incluem a rota 501 de WhatsApp nem rotas inexistentes. Não expor
 - Token expirado: faça login novamente; na coleção, execute as pastas anteriores para renovar tokens e IDs.
 - Upload no Postman falha: selecione o ambiente e o working directory com `amostra.pdf` e o JSON da coleção.
 - Front mostra mock: confira `VITE_USE_MOCK=false`, inclusive em `.env.local`, e reinicie o Vite.
+
+## Evidências da TED 03
+
+Siga o [roteiro de capturas](docs/ted03-prints.md) para preparar os dados e registrar as Figuras 10 a 14.
+Atalhos: `npm run prints:preparar`, `npm run prints:check` e `npm run postman:run`.

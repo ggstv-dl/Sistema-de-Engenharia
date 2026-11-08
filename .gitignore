@@ -49,3 +49,5 @@ coverage/
 # Uploads directory
 ./src/uploads/
 /uploads/
+
+docs/evidencias/*.png
