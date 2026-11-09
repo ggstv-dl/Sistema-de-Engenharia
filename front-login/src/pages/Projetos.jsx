@@ -6,10 +6,14 @@ import {
   PRIORIDADES,
 } from "../services/projetosService";
 import { getUser } from "../services/authService";
+import { criarCliente, listarClientes } from "../services/clientesService";
 import { IconPlus, IconSearch, IconPencil, IconClose } from "../components/icons";
 import "../styles/projetos.css";
 
 const POR_PAGINA = 6;
+const NOVO_CLIENTE = "__novo_cliente__";
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const clienteVazio = () => ({ nome: "", email: "", telefone: "" });
 
 const rotuloStatus = Object.fromEntries(STATUS.map((s) => [s.valor, s.rotulo]));
 const rotuloPrioridade = Object.fromEntries(
@@ -54,7 +58,7 @@ function Campo({ id, rotulo, erro, className = "", children }) {
       <label htmlFor={id}>{rotulo}</label>
       {children}
       {erro && (
-        <span className="error" role="alert">
+        <span id={`${id}-erro`} className="error" role="alert">
           {erro}
         </span>
       )}
@@ -69,7 +73,7 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
   const [form, setForm] = useState(() => ({
     titulo: projeto?.titulo ?? "",
     cliente: projeto?.cliente ?? "",
-    clienteId: projeto?.clienteId ?? null,
+    clienteId: projeto?.clienteId ?? "",
     engenheiro: getUser()?.nome ?? "",
     localizacao: projeto?.localizacao ?? "",
     status: projeto?.status ?? "planejamento",
@@ -79,23 +83,111 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
   const [erros, setErros] = useState({});
   const [erroServidor, setErroServidor] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [clientes, setClientes] = useState([]);
+  const [carregandoClientes, setCarregandoClientes] = useState(!editando);
+  const [erroClientes, setErroClientes] = useState("");
+  const [novoClienteAberto, setNovoClienteAberto] = useState(false);
+  const [formCliente, setFormCliente] = useState(clienteVazio);
+  const [errosCliente, setErrosCliente] = useState({});
+  const [erroClienteServidor, setErroClienteServidor] = useState("");
+  const [salvandoCliente, setSalvandoCliente] = useState(false);
+  const ocupado = salvando || salvandoCliente;
+
+  const carregarClientes = useCallback(async () => {
+    setCarregandoClientes(true);
+    setErroClientes("");
+    try {
+      setClientes(await listarClientes());
+    } catch (err) {
+      setErroClientes(err.message || "Não foi possível carregar os clientes.");
+    } finally {
+      setCarregandoClientes(false);
+    }
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
     if (el && !el.open) el.showModal();
   }, []);
 
+  useEffect(() => {
+    if (!editando) carregarClientes();
+  }, [editando, carregarClientes]);
+
   const mudar = (campo) => (e) =>
     setForm((f) => ({ ...f, [campo]: e.target.value }));
 
+  function selecionarCliente(e) {
+    const valor = e.target.value;
+    const novo = valor === NOVO_CLIENTE;
+    setNovoClienteAberto(novo);
+    setFormCliente(clienteVazio());
+    setErrosCliente({});
+    setErroClienteServidor("");
+    setErros((atuais) => ({ ...atuais, cliente: "" }));
+    const cliente = clientes.find((item) => String(item.id) === valor);
+    setForm((atual) => ({
+      ...atual,
+      clienteId: novo ? "" : valor,
+      cliente: cliente?.nome ?? "",
+    }));
+  }
+
+  function cancelarNovoCliente() {
+    setNovoClienteAberto(false);
+    setFormCliente(clienteVazio());
+    setErrosCliente({});
+    setErroClienteServidor("");
+    setForm((atual) => ({ ...atual, clienteId: "", cliente: "" }));
+  }
+
+  async function salvarCliente() {
+    if (ocupado) return;
+    setErroClienteServidor("");
+    const dados = {
+      nome: formCliente.nome.trim(),
+      email: formCliente.email.trim().toLowerCase(),
+      telefone: formCliente.telefone.trim(),
+    };
+    const novos = {};
+    if (dados.nome.length < 2 || dados.nome.length > 100)
+      novos.nome = "O nome deve ter entre 2 e 100 caracteres.";
+    if (dados.email.length > 254 || !EMAIL_REGEX.test(dados.email))
+      novos.email = "Informe um endereço de e-mail válido.";
+    const digitos = dados.telefone.replace(/\D/g, "");
+    if (digitos.length < 10 || digitos.length > 13)
+      novos.telefone = "O telefone deve conter de 10 a 13 dígitos.";
+    setErrosCliente(novos);
+    if (Object.keys(novos).length > 0) return;
+
+    setSalvandoCliente(true);
+    try {
+      const cliente = await criarCliente(dados);
+      setClientes((atuais) => [...atuais, cliente]);
+      setForm((atual) => ({ ...atual, clienteId: String(cliente.id), cliente: cliente.nome }));
+      setErros((atuais) => ({ ...atuais, cliente: "" }));
+      setNovoClienteAberto(false);
+      setFormCliente(clienteVazio());
+    } catch (err) {
+      setErroClienteServidor(
+        err.status === 409
+          ? "Já existe um cliente com este e-mail."
+          : err.message || "Não foi possível salvar o cliente."
+      );
+    } finally {
+      setSalvandoCliente(false);
+    }
+  }
+
   async function enviar(e) {
     e.preventDefault();
+    if (ocupado || novoClienteAberto || (!editando && (carregandoClientes || erroClientes))) return;
     setErroServidor("");
 
     const novos = {};
     if (form.titulo.trim().length < 3)
       novos.titulo = "Informe o nome do projeto (mínimo 3 letras).";
-    if (!editando && !form.cliente.trim()) novos.cliente = "Informe o cliente.";
+    if (!editando && !form.clienteId) novos.cliente = "Selecione um cliente.";
     setErros(novos);
     if (Object.keys(novos).length > 0) return;
 
@@ -108,7 +200,7 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
         engenheiro: form.engenheiro.trim(),
         localizacao: form.localizacao.trim(),
         id: projeto?.id,
-      }, projeto);
+      });
       onSalvo();
     } catch (err) {
       setErroServidor(err.message || "Não foi possível salvar o projeto.");
@@ -123,8 +215,11 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
       className="modal"
       aria-labelledby="modal-titulo"
       onClose={onClose}
+      onCancel={(e) => {
+        if (ocupado) e.preventDefault();
+      }}
       onClick={(e) => {
-        if (e.target === ref.current) ref.current.close();
+        if (e.target === ref.current && !ocupado) ref.current.close();
       }}
     >
       <form onSubmit={enviar} noValidate>
@@ -134,6 +229,7 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
             type="button"
             className="icon-btn"
             aria-label="Fechar"
+            disabled={ocupado}
             onClick={() => ref.current.close()}
           >
             <IconClose size={18} />
@@ -148,19 +244,40 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
               value={form.titulo}
               onChange={mudar("titulo")}
               aria-invalid={Boolean(erros.titulo)}
-              disabled={salvando}
+              disabled={ocupado}
             />
           </Campo>
 
           <Campo id="cliente" rotulo="Cliente" erro={erros.cliente}>
-            <input
-              id="cliente"
-              type="text"
-              value={form.cliente}
-              onChange={mudar("cliente")}
-              aria-invalid={Boolean(erros.cliente)}
-              disabled={editando || salvando}
-            />
+            {editando ? (
+              <input id="cliente" type="text" value={form.cliente} disabled />
+            ) : (
+              <>
+                <select
+                  id="cliente"
+                  value={novoClienteAberto ? NOVO_CLIENTE : form.clienteId}
+                  onChange={selecionarCliente}
+                  disabled={ocupado || carregandoClientes || Boolean(erroClientes)}
+                  aria-busy={carregandoClientes}
+                  aria-invalid={Boolean(erros.cliente || erroClientes)}
+                  aria-describedby={erroClientes ? "clientes-erro" : erros.cliente ? "cliente-erro" : undefined}
+                >
+                  <option value="">{carregandoClientes ? "Carregando clientes…" : "Selecione um cliente"}</option>
+                  {clientes.map((cliente) => (
+                    <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
+                  ))}
+                  <option value={NOVO_CLIENTE}>+ Novo cliente</option>
+                </select>
+                {erroClientes && (
+                  <>
+                    <span id="clientes-erro" className="error" role="alert">{erroClientes}</span>
+                    <button type="button" className="btn" onClick={carregarClientes} disabled={ocupado}>
+                      Tentar de novo
+                    </button>
+                  </>
+                )}
+              </>
+            )}
           </Campo>
 
           <Campo id="engenheiro" rotulo="Engenheiro responsável">
@@ -172,6 +289,63 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
             />
           </Campo>
 
+          {novoClienteAberto && (
+            <div
+              className="span-2 form-grid"
+              role="group"
+              aria-labelledby="novo-cliente-titulo"
+              aria-busy={salvandoCliente}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && e.target.tagName === "INPUT") e.preventDefault();
+              }}
+            >
+              <h3 id="novo-cliente-titulo" className="span-2">Novo cliente</h3>
+              <Campo id="cliente-nome" rotulo="Nome" erro={errosCliente.nome} className="span-2">
+                <input
+                  id="cliente-nome"
+                  value={formCliente.nome}
+                  onChange={(e) => setFormCliente((atual) => ({ ...atual, nome: e.target.value }))}
+                  aria-invalid={Boolean(errosCliente.nome)}
+                  aria-describedby={errosCliente.nome ? "cliente-nome-erro" : undefined}
+                  disabled={ocupado}
+                />
+              </Campo>
+              <Campo id="cliente-email" rotulo="E-mail" erro={errosCliente.email}>
+                <input
+                  id="cliente-email"
+                  type="email"
+                  value={formCliente.email}
+                  onChange={(e) => setFormCliente((atual) => ({ ...atual, email: e.target.value }))}
+                  aria-invalid={Boolean(errosCliente.email)}
+                  aria-describedby={errosCliente.email ? "cliente-email-erro" : undefined}
+                  disabled={ocupado}
+                />
+              </Campo>
+              <Campo id="cliente-telefone" rotulo="Telefone" erro={errosCliente.telefone}>
+                <input
+                  id="cliente-telefone"
+                  type="tel"
+                  value={formCliente.telefone}
+                  onChange={(e) => setFormCliente((atual) => ({ ...atual, telefone: e.target.value }))}
+                  aria-invalid={Boolean(errosCliente.telefone)}
+                  aria-describedby={errosCliente.telefone ? "cliente-telefone-erro" : undefined}
+                  disabled={ocupado}
+                />
+              </Campo>
+              {erroClienteServidor && (
+                <div className="server-error span-2" role="alert">{erroClienteServidor}</div>
+              )}
+              <div className="page-actions span-2">
+                <button type="button" className="btn btn-primary" onClick={salvarCliente} disabled={ocupado}>
+                  {salvandoCliente ? "Salvando…" : "Salvar cliente"}
+                </button>
+                <button type="button" className="btn" onClick={cancelarNovoCliente} disabled={ocupado}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
           <Campo id="localizacao" rotulo="Localização" className="span-2">
             <input
               id="localizacao"
@@ -179,7 +353,7 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
               placeholder="Cidade, UF"
               value={form.localizacao}
               onChange={mudar("localizacao")}
-              disabled={salvando}
+              disabled={ocupado}
             />
           </Campo>
 
@@ -188,7 +362,7 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
               id="status"
               value={form.status}
               onChange={mudar("status")}
-              disabled={salvando}
+              disabled={ocupado}
             >
               {STATUS.map((s) => (
                 <option key={s.valor} value={s.valor}>
@@ -203,7 +377,7 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
               id="prioridade"
               value={form.prioridade}
               onChange={mudar("prioridade")}
-              disabled={salvando}
+              disabled={ocupado}
             >
               {PRIORIDADES.map((p) => (
                 <option key={p.valor} value={p.valor}>
@@ -219,7 +393,7 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
               type="date"
               value={form.dataInicio}
               onChange={mudar("dataInicio")}
-              disabled={salvando}
+              disabled={ocupado}
             />
           </Campo>
         </div>
@@ -231,10 +405,14 @@ function ProjetoModal({ projeto, onClose, onSalvo }) {
         )}
 
         <footer className="modal-footer">
-          <button type="button" className="btn" onClick={() => ref.current.close()}>
+          <button type="button" className="btn" onClick={() => ref.current.close()} disabled={ocupado}>
             Cancelar
           </button>
-          <button type="submit" className="btn btn-primary" disabled={salvando}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={ocupado || novoClienteAberto || (!editando && (carregandoClientes || Boolean(erroClientes)))}
+          >
             {salvando ? "Salvando..." : "Salvar"}
           </button>
         </footer>

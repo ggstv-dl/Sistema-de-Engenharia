@@ -13,7 +13,9 @@ function validate({ mode, nome, email, senha, confirmar }) {
   if (!email.trim()) errors.email = "Informe seu e-mail.";
   else if (!EMAIL_REGEX.test(email.trim())) errors.email = "E-mail inválido.";
   if (!senha) errors.senha = "Informe sua senha.";
-  else if (senha.length < 6)
+  else if (mode === "criar" && senha.length < 8)
+    errors.senha = "A senha deve ter ao menos 8 caracteres.";
+  else if (mode !== "criar" && senha.length < 6)
     errors.senha = "A senha deve ter ao menos 6 caracteres.";
   if (mode === "criar" && senha && confirmar !== senha)
     errors.confirmar = "As senhas não são iguais.";
@@ -166,7 +168,7 @@ export default function Login({ onSuccess }) {
               <input
                 id="senha"
                 type={showPassword ? "text" : "password"}
-                placeholder={isCreate ? "Mínimo de 6 caracteres" : "Sua senha"}
+                placeholder={isCreate ? "Mínimo de 8 caracteres" : "Sua senha"}
                 autoComplete={isCreate ? "new-password" : "current-password"}
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}

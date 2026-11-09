@@ -10,7 +10,7 @@ async function obterResumo(engenheiroId) {
   inicioMes.setDate(1);
   inicioMes.setHours(0, 0, 0, 0);
 
-  const [obrasAtivas, totalDiarios, custoMes, projetos, diarios] =
+  const [obrasAtivas, totalDiarios, custoMes, diarios] =
     await Promise.all([
       prisma.projeto.count({
         where: {
@@ -35,21 +35,6 @@ async function obterResumo(engenheiroId) {
         _sum: {
           valor: true,
         },
-      }),
-      prisma.projeto.findMany({
-        where: {
-          engenheiroId,
-        },
-        select: {
-          id: true,
-          titulo: true,
-          status: true,
-          criadoEm: true,
-        },
-        orderBy: {
-          atualizadoEm: 'desc',
-        },
-        take: 6,
       }),
       prisma.diarioObra.findMany({
         where: {

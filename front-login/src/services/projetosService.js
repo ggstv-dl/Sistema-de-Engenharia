@@ -1,5 +1,6 @@
 import { request } from "./api";
 import { getToken } from "./authService";
+import { listarClientes } from "./clientesService";
 
 // Com VITE_USE_MOCK=true usa dados de exemplo (salvos no navegador, então
 // o que você criar/editar continua depois de recarregar a página).
@@ -48,7 +49,6 @@ function montarCorpo(d) {
     ...(d.descricao !== undefined ? { descricao: d.descricao } : {}),
     status: d.status,
     prioridade: d.prioridade,
-    ...(d.clienteId ? { clienteId: d.clienteId } : {}),
     localizacao: d.localizacao || null,
     dataInicio: d.dataInicio || null,
   };
@@ -106,15 +106,21 @@ export async function listarProjetos() {
 }
 
 // Cria (sem id) ou edita (com id)
-export async function salvarProjeto(dados, projetoOriginal) {
+export async function salvarProjeto(dados) {
   if (USE_MOCK) {
     await esperar(400);
     const lista = lerExemplo();
+    const projeto = { ...dados };
+    if (dados.clienteId) {
+      const clientes = await listarClientes();
+      const cliente = clientes.find((item) => String(item.id) === String(dados.clienteId));
+      if (cliente) projeto.cliente = cliente.nome;
+    }
     if (dados.id) {
       const i = lista.findIndex((p) => p.id === dados.id);
-      if (i >= 0) lista[i] = { ...lista[i], ...dados };
+      if (i >= 0) lista[i] = { ...lista[i], ...projeto };
     } else {
-      lista.unshift({ ...dados, id: Date.now(), progresso: 0 });
+      lista.unshift({ ...projeto, id: Date.now(), progresso: 0 });
     }
     gravarExemplo(lista);
     return;
@@ -123,14 +129,11 @@ export async function salvarProjeto(dados, projetoOriginal) {
   const corpo = montarCorpo(dados);
   const token = getToken();
   if (dados.id) {
-    if (dados.clienteId === projetoOriginal?.clienteId) {
-      delete corpo.clienteId;
-    }
     await request(`${PROJETOS_PATH}/${dados.id}`, { method: "PUT", body: corpo, token });
   } else {
     if (!dados.clienteId) {
       throw new Error("Selecione um cliente para criar o projeto.");
     }
-    await request(PROJETOS_PATH, { method: "POST", body: corpo, token });
+    await request(PROJETOS_PATH, { method: "POST", body: { ...corpo, clienteId: dados.clienteId }, token });
   }
 }

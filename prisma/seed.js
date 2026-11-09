@@ -21,6 +21,15 @@ async function obterOuCriarProjeto(dados) {
 }
 
 async function main() {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const diasAtras = (dias) => {
+    const data = new Date(hoje);
+    data.setDate(data.getDate() - dias);
+    return data;
+  };
+  const ontem = diasAtras(1);
+  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
   const senhaHash = await bcrypt.hash(SENHA_PADRAO, CUSTO_BCRYPT);
 
   // Upsert por e-mail: rodar o seed de novo não quebra o e-mail único.
@@ -62,6 +71,7 @@ async function main() {
     descricao: 'Conjunto habitacional com 50 unidades',
     status: 'em_andamento',
     prioridade: 'alta',
+    dataInicio: diasAtras(30),
     clienteId: cliente1.id,
     engenheiroId: engenheiro1.id,
   });
@@ -71,6 +81,7 @@ async function main() {
     descricao: 'Edifício comercial de 10 Andares',
     status: 'planejamento',
     prioridade: 'media',
+    dataInicio: diasAtras(60),
     clienteId: cliente2.id,
     engenheiroId: engenheiro2.id,
   });
@@ -80,7 +91,7 @@ async function main() {
     await prisma.diarioObra.createMany({
       data: [
         {
-          data: new Date('2024-01-15'),
+          data: ontem,
           descricao: 'Fundação escavada com sucesso',
           observacoes: 'Profundidade 2.5m',
           fotos: ['foto1.jpg', 'foto2.jpg'],
@@ -88,7 +99,7 @@ async function main() {
           engenheiroId: engenheiro1.id,
         },
         {
-          data: new Date('2024-01-20'),
+          data: hoje,
           descricao: 'Estrutura de concreto armado',
           observacoes: 'Laje executada',
           fotos: ['foto3.jpg'],
@@ -104,14 +115,14 @@ async function main() {
           descricao: 'Area do terreno',
           valor: 500.5,
           unidade: 'm2',
-          data: new Date('2024-01-15'),
+          data: ontem,
           projetoId: projeto1.id,
         },
         {
           descricao: 'Volume de concreto',
           valor: 150.2,
           unidade: 'm3',
-          data: new Date('2024-01-20'),
+          data: hoje,
           projetoId: projeto1.id,
         },
       ],
@@ -132,7 +143,7 @@ async function main() {
         nome: 'Orçamento Básico',
         descricao: 'Orçamento inicial de serviços',
         valor: 15000.0,
-        dataCriacao: new Date('2024-01-10'),
+        dataCriacao: inicioMes,
         projetoId: projeto1.id,
       },
     });
@@ -154,7 +165,7 @@ async function main() {
         nome: 'Orçamento Completo',
         descricao: 'Orçamento detalhado com todas as especificações',
         valor: 30000.0,
-        dataCriacao: new Date('2024-01-15'),
+        dataCriacao: hoje,
         projetoId: projeto2.id,
       },
     });

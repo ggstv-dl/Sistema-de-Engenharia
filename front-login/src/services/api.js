@@ -16,6 +16,12 @@ export class ApiError extends Error {
   }
 }
 
+function tratarNaoAutorizado(status, token) {
+  if (status === 401 && token) {
+    callbackNaoAutorizado?.();
+  }
+}
+
 // body pode ser um objeto (vai como JSON) ou um FormData (envio de arquivos).
 export async function request(path, { method = "GET", body, token } = {}) {
   const isForm = typeof FormData !== "undefined" && body instanceof FormData;
@@ -46,9 +52,7 @@ export async function request(path, { method = "GET", body, token } = {}) {
   }
 
   if (!response.ok) {
-    if (response.status === 401 && token) {
-      callbackNaoAutorizado?.();
-    }
+    tratarNaoAutorizado(response.status, token);
     // O back-end do grupo responde com "mensagem"; aceitamos também "message" e "error".
     const message =
       data?.mensagem ||
@@ -70,6 +74,9 @@ export async function requestBlob(path, { token } = {}) {
   } catch {
     throw new ApiError("Não foi possível conectar ao servidor. Verifique sua internet.", 0);
   }
-  if (!response.ok) throw new ApiError("Não foi possível baixar o arquivo.", response.status);
+  if (!response.ok) {
+    tratarNaoAutorizado(response.status, token);
+    throw new ApiError("Não foi possível baixar o arquivo.", response.status);
+  }
   return response.blob();
 }

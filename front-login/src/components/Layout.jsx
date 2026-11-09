@@ -5,7 +5,6 @@ import {
   IconFolder,
   IconBook,
   IconReceipt,
-  IconPie,
   IconLogout,
 } from "./icons";
 import { getUser } from "../services/authService";
@@ -16,7 +15,6 @@ const ITEMS = [
   { to: "/projetos", label: "Projetos", icon: IconFolder },
   { to: "/diario", label: "Diário de Obra", icon: IconBook },
   { to: "/orcamentos", label: "Orçamentos", icon: IconReceipt },
-  { to: "/relatorios", label: "Relatórios", icon: IconPie },
 ];
 
 function initials(nome) {
