@@ -14,7 +14,7 @@ Abra http://localhost:5173. O back-end precisa estar rodando no endereço de `VI
 
 Tudo fica em `src/services/authService.js`:
 
-- `LOGIN_PATH` — rota de login (padrão `/auth/login`)
+- `LOGIN_PATH` — rota de login (padrão `/api/auth/login`)
 - `buildLoginBody` — nomes dos campos enviados (padrão `email` e `senha`)
 - `extractToken` — onde vem o token na resposta (padrão `data.token`)
 
