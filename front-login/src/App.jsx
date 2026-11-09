@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Layout from "./components/Layout";
@@ -8,19 +8,11 @@ import Diario from "./pages/Diario";
 import Orcamentos from "./pages/Orcamentos";
 import Relatorios from "./pages/Relatorios";
 import { isAuthenticated, logout } from "./services/authService";
-import { onNaoAutorizado } from "./services/api";
 import "./styles/app.css";
+import "./styles/tema.css"; // identidade visual: precisa ser o último
 
 export default function App() {
   const [logged, setLogged] = useState(isAuthenticated());
-
-  useEffect(() => {
-    onNaoAutorizado(() => {
-      logout();
-      setLogged(false);
-    });
-    return () => onNaoAutorizado(null);
-  }, []);
 
   if (!logged) return <Login onSuccess={() => setLogged(true)} />;
 
