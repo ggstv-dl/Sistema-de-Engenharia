@@ -1,4 +1,4 @@
-import { request } from "./api";
+import { ApiError, request } from "./api";
 import { getToken } from "./authService";
 import { montarCorpoRdo, normalizarDiario, resolverUrlArquivo } from "./diarioMapeamento";
 
@@ -14,7 +14,7 @@ const ARQUIVOS_PATH = (projetoId) => `/api/projetos/${projetoId}/arquivos`;
 
 const STORAGE_KEY = "se_mock_diarios";
 
-export const MAX_FOTOS = 6;
+export const MAX_FOTOS = 10;
 export const MAX_FOTO_MB = 10;
 
 export const CLIMAS = [
@@ -29,6 +29,17 @@ export const EQUIPAMENTOS = ["Betoneira", "Vibrador de Imersão", "Retroescavade
 
 export function urlDoArquivo(caminho) {
   return resolverUrlArquivo(caminho, URL_BASE_API);
+}
+
+export function validarFoto(arquivo) {
+  const erros = [];
+  if (!/\.(jpe?g|png)$/i.test(arquivo.name)) {
+    erros.push(`"${arquivo.name}": use apenas arquivos .jpg, .jpeg ou .png.`);
+  }
+  if (arquivo.size > MAX_FOTO_MB * 1024 * 1024) {
+    erros.push(`"${arquivo.name}": o tamanho máximo é ${MAX_FOTO_MB} MB.`);
+  }
+  return erros.join(" ");
 }
 
 // ---- Fotos ----
@@ -154,11 +165,18 @@ export async function listarDiarios() {
   return lista.map((item) => normalizarDiario(item, URL_BASE_API));
 }
 
-// dados.fotos = lista de File (arquivos escolhidos no formulário)
-export async function salvarDiario(dados) {
+export async function salvarDiario(dados, { fotosEnviadas = new Map(), onProgresso } = {}) {
+  const fotos = (dados.fotos ?? []).map((foto) => ({
+    id: foto.id ?? foto,
+    arquivo: foto.file ?? foto,
+  }));
+  const errosFotos = fotos.map((foto) => validarFoto(foto.arquivo)).filter(Boolean);
+  if (fotos.length > MAX_FOTOS) errosFotos.push(`Selecione no máximo ${MAX_FOTOS} fotos.`);
+  if (errosFotos.length) throw new ApiError(errosFotos.join(" "), 400);
+
   if (USE_MOCK) {
     await esperar(400);
-    const fotos = await Promise.all(dados.fotos.map((f) => reduzirImagem(f)));
+    const imagens = await Promise.all(fotos.map((foto) => reduzirImagem(foto.arquivo)));
     const agora = new Date();
     const registro = {
       id: Date.now(),
@@ -173,19 +191,37 @@ export async function salvarDiario(dados) {
       observacoes: dados.observacoes,
       maoDeObra: dados.maoDeObra,
       equipamentos: dados.equipamentos,
-      fotos,
+      fotos: imagens,
     };
     gravarExemplo([registro, ...lerExemplo()]);
     return;
   }
 
   const token = getToken();
-  await request(SYNC_PATH, { method: "POST", body: montarCorpoRdo(dados), token });
+  const projetoId = String(dados.projetoId);
+  const caminhos = [];
 
-  // Fotos: uma por vez, pela rota de upload de arquivos do projeto.
-  for (const foto of dados.fotos) {
+  for (const [indice, foto] of fotos.entries()) {
+    const enviada = fotosEnviadas.get(foto.id);
+    if (enviada?.projetoId === projetoId) {
+      caminhos.push(enviada.caminho);
+      continue;
+    }
+    onProgresso?.(`Enviando foto ${indice + 1} de ${fotos.length}…`);
     const form = new FormData();
-    form.append("arquivo", foto);
-    await request(ARQUIVOS_PATH(dados.projetoId), { method: "POST", body: form, token });
+    form.append("arquivo", foto.arquivo);
+    try {
+      const arquivo = await request(ARQUIVOS_PATH(projetoId), { method: "POST", body: form, token });
+      if (typeof arquivo?.caminho !== "string" || !arquivo.caminho.startsWith("/uploads/")) {
+        throw new ApiError("O servidor não devolveu o caminho da foto.", 502);
+      }
+      fotosEnviadas.set(foto.id, { projetoId, caminho: arquivo.caminho });
+      caminhos.push(arquivo.caminho);
+    } catch (err) {
+      throw new ApiError(`Falha ao enviar a foto ${foto.arquivo.name}: ${err.message}`, err.status ?? 0);
+    }
   }
+
+  onProgresso?.("Salvando registro…");
+  return request(SYNC_PATH, { method: "POST", body: montarCorpoRdo(dados, caminhos), token });
 }

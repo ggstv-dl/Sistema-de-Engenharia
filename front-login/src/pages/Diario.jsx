@@ -7,6 +7,8 @@ import {
   EQUIPAMENTOS,
   MAX_FOTOS,
   MAX_FOTO_MB,
+  urlDoArquivo,
+  validarFoto,
 } from "../services/diarioService";
 import { listarProjetos } from "../services/projetosService";
 import { getUser } from "../services/authService";
@@ -55,6 +57,19 @@ function Clima({ valor }) {
       {Icone && <Icone size={16} />}
       {ROTULO_CLIMA[valor] ?? valor}
     </span>
+  );
+}
+
+function FotoRegistro({ src, alt, className = "" }) {
+  const [indisponivel, setIndisponivel] = useState(false);
+  useEffect(() => setIndisponivel(false), [src]);
+
+  return indisponivel ? (
+    <span className={`${className} foto-indisponivel`} role="img" aria-label={alt}>
+      Imagem indisponível
+    </span>
+  ) : (
+    <img src={urlDoArquivo(src)} alt={alt} className={className} onError={() => setIndisponivel(true)} />
   );
 }
 
@@ -123,7 +138,7 @@ function CardRegistro({ registro: r, onVer }) {
           {r.fotos.length > 0 && (
             <div className="thumbs">
               {visiveis.map((src, i) => (
-                <img key={i} className="thumb" src={src} alt={`Foto ${i + 1} do registro`} />
+                <FotoRegistro key={i} className="thumb" src={src} alt={`Foto ${i + 1} do registro`} />
               ))}
               {restantes > 0 && (
                 <button
@@ -205,7 +220,7 @@ function DetalheModal({ registro: r, onClose }) {
             <h3 className="reg-label">Fotos ({r.fotos.length})</h3>
             <div className="fotos-detalhe">
               {r.fotos.map((src, i) => (
-                <img key={i} src={src} alt={`Foto ${i + 1} do registro`} />
+                <FotoRegistro key={i} src={src} alt={`Foto ${i + 1} do registro`} />
               ))}
             </div>
           </>
@@ -236,7 +251,7 @@ function Campo({ id, rotulo, erro, className = "", children }) {
 }
 
 // Linhas "nome + quantidade" (mão de obra e equipamentos)
-function EditorLinhas({ legenda, linhas, setLinhas, campo, sugestoes, placeholder, erro }) {
+function EditorLinhas({ legenda, linhas, setLinhas, campo, sugestoes, placeholder, erro, desabilitado }) {
   const listaId = `sug-${campo}`;
 
   const mudar = (i, chave, valor) =>
@@ -262,6 +277,7 @@ function EditorLinhas({ legenda, linhas, setLinhas, campo, sugestoes, placeholde
               aria-label={`${legenda}: nome (linha ${i + 1})`}
               value={l[campo]}
               onChange={(e) => mudar(i, campo, e.target.value)}
+              disabled={desabilitado}
             />
             <input
               type="number"
@@ -273,11 +289,13 @@ function EditorLinhas({ legenda, linhas, setLinhas, campo, sugestoes, placeholde
               aria-label={`${legenda}: quantidade (linha ${i + 1})`}
               value={l.qtd}
               onChange={(e) => mudar(i, "qtd", e.target.value)}
+              disabled={desabilitado}
             />
             <button
               type="button"
               className="icon-btn"
               aria-label={`Remover linha ${i + 1} de ${legenda.toLowerCase()}`}
+              disabled={desabilitado}
               onClick={() =>
                 setLinhas((ls) =>
                   ls.length > 1 ? ls.filter((_, k) => k !== i) : [{ [campo]: "", qtd: "" }]
@@ -294,7 +312,7 @@ function EditorLinhas({ legenda, linhas, setLinhas, campo, sugestoes, placeholde
         type="button"
         className="btn btn-sm btn-add"
         onClick={() => setLinhas((ls) => [...ls, { [campo]: "", qtd: "" }])}
-        disabled={linhas.length >= 30}
+        disabled={desabilitado || linhas.length >= 30}
       >
         <IconPlus size={16} />
         Adicionar linha
@@ -312,6 +330,7 @@ function EditorLinhas({ legenda, linhas, setLinhas, campo, sugestoes, placeholde
 function DiarioModal({ projetos, onClose, onSalvo }) {
   const ref = useRef(null);
   const fotosRef = useRef([]);
+  const fotosEnviadas = useRef(new Map());
 
   const [form, setForm] = useState({
     projetoId: "",
@@ -327,6 +346,7 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
   const [erros, setErros] = useState({});
   const [erroServidor, setErroServidor] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [progresso, setProgresso] = useState("");
 
   useEffect(() => {
     const el = ref.current;
@@ -345,6 +365,7 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
   const mudar = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target.value }));
 
   function adicionarFotos(e) {
+    if (salvando) return;
     const escolhidas = Array.from(e.target.files || []);
     e.target.value = ""; // permite escolher o mesmo arquivo de novo
     if (escolhidas.length === 0) return;
@@ -352,19 +373,17 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
     const aviso = [];
     const aceitas = [];
     for (const file of escolhidas) {
-      if (!file.type.startsWith("image/")) {
-        aviso.push(`"${file.name}" não é uma imagem.`);
-      } else if (file.size > MAX_FOTO_MB * 1024 * 1024) {
-        aviso.push(`"${file.name}" passa de ${MAX_FOTO_MB} MB.`);
+      const erro = validarFoto(file);
+      if (erro) {
+        aviso.push(erro);
+      } else if (fotos.length + aceitas.length >= MAX_FOTOS) {
+        aviso.push(`"${file.name}": máximo de ${MAX_FOTOS} fotos por registro.`);
       } else {
         aceitas.push(file);
       }
     }
 
-    const vagas = MAX_FOTOS - fotos.length;
-    if (aceitas.length > vagas) aviso.push(`Máximo de ${MAX_FOTOS} fotos por registro.`);
-
-    const novas = aceitas.slice(0, Math.max(0, vagas)).map((file) => ({
+    const novas = aceitas.map((file) => ({
       id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2)}`,
       file,
       preview: URL.createObjectURL(file),
@@ -375,11 +394,11 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
   }
 
   function removerFoto(id) {
-    setFotos((atual) => {
-      const alvo = atual.find((f) => f.id === id);
-      if (alvo) URL.revokeObjectURL(alvo.preview);
-      return atual.filter((f) => f.id !== id);
-    });
+    if (salvando) return;
+    const alvo = fotos.find((f) => f.id === id);
+    if (alvo) URL.revokeObjectURL(alvo.preview);
+    fotosEnviadas.current.delete(id);
+    setFotos((atual) => atual.filter((f) => f.id !== id));
     setErros((er) => ({ ...er, fotos: "" }));
   }
 
@@ -403,6 +422,7 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
 
   async function enviar(e) {
     e.preventDefault();
+    if (salvando) return;
     setErroServidor("");
 
     const projeto = projetos.find((p) => String(p.id) === form.projetoId);
@@ -423,10 +443,14 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
       novos.mao = "Use até 30 linhas, com nome de 1 a 60 caracteres e quantidade inteira de 1 a 1000.";
     if (eq.invalida)
       novos.equip = "Use até 30 linhas, com nome de 1 a 60 caracteres e quantidade inteira de 1 a 1000.";
+    const errosFotos = fotos.map((foto) => validarFoto(foto.file)).filter(Boolean);
+    if (fotos.length > MAX_FOTOS) errosFotos.push(`Selecione no máximo ${MAX_FOTOS} fotos.`);
+    if (errosFotos.length) novos.fotos = errosFotos.join(" ");
     setErros(novos);
     if (Object.keys(novos).length > 0) return;
 
     setSalvando(true);
+    setProgresso("Salvando registro…");
     try {
       await salvarDiario({
         projetoId: projeto.id,
@@ -439,13 +463,21 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
         maoDeObra: m.itens,
         equipamentos: eq.itens,
         autor: getUser()?.nome ?? "",
-        fotos: fotos.map((f) => f.file),
-      });
+        fotos,
+      }, { fotosEnviadas: fotosEnviadas.current, onProgresso: setProgresso });
+      fotos.forEach((foto) => URL.revokeObjectURL(foto.preview));
+      fotosRef.current = [];
+      fotosEnviadas.current.clear();
+      setFotos([]);
+      setForm({ projetoId: "", atividade: "", data: hojeLocal(), clima: "ensolarado", descricao: "", observacoes: "" });
+      setMao([{ funcao: "", qtd: "" }]);
+      setEquip([{ nome: "", qtd: "" }]);
       onSalvo();
     } catch (err) {
       setErroServidor(err.message || "Não foi possível salvar o registro.");
     } finally {
       setSalvando(false);
+      setProgresso("");
     }
   }
 
@@ -457,14 +489,17 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
       className="modal modal-lg"
       aria-labelledby="novo-titulo"
       onClose={onClose}
+      onCancel={(e) => {
+        if (salvando) e.preventDefault();
+      }}
       onClick={(e) => {
-        if (e.target === ref.current) ref.current.close();
+        if (e.target === ref.current && !salvando) ref.current.close();
       }}
     >
       <form onSubmit={enviar} noValidate>
         <header className="modal-header">
           <h2 id="novo-titulo">Novo Registro</h2>
-          <button type="button" className="icon-btn" aria-label="Fechar" onClick={() => ref.current.close()}>
+          <button type="button" className="icon-btn" aria-label="Fechar" onClick={() => ref.current.close()} disabled={salvando}>
             <IconClose size={18} />
           </button>
         </header>
@@ -558,6 +593,7 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
             sugestoes={FUNCOES}
             placeholder="Função (ex.: Pedreiros)"
             erro={erros.mao}
+            desabilitado={salvando}
           />
 
           <EditorLinhas
@@ -568,6 +604,7 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
             sugestoes={EQUIPAMENTOS}
             placeholder="Equipamento (ex.: Betoneira)"
             erro={erros.equip}
+            desabilitado={salvando}
           />
 
           <div className="field span-2">
@@ -579,7 +616,7 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
               <div className="fotos-grid">
                 {fotos.map((f, i) => (
                   <div key={f.id} className="foto-item">
-                    <img src={f.preview} alt={`Prévia da foto ${i + 1}`} />
+                    <FotoRegistro src={f.preview} alt={`Prévia de ${f.file.name}`} />
                     <button
                       type="button"
                       className="foto-remove"
@@ -601,12 +638,14 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
                 id="fotos"
                 className="sr-only"
                 type="file"
-                accept="image/*"
+                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                 multiple
                 onChange={adicionarFotos}
                 disabled={salvando || fotos.length >= MAX_FOTOS}
               />
             </label>
+
+            <span className="cell-sub">JPG, JPEG ou PNG, até {MAX_FOTO_MB} MB por foto.</span>
 
             {erros.fotos && (
               <span className="error" role="alert">
@@ -616,6 +655,10 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
           </div>
         </div>
 
+        {progresso && (
+          <p className="cell-sub modal-erro" role="status" aria-live="polite">{progresso}</p>
+        )}
+
         {erroServidor && (
           <div className="server-error modal-erro" role="alert">
             {erroServidor}
@@ -623,7 +666,7 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
         )}
 
         <footer className="modal-footer">
-          <button type="button" className="btn" onClick={() => ref.current.close()}>
+          <button type="button" className="btn" onClick={() => ref.current.close()} disabled={salvando}>
             Cancelar
           </button>
           <button type="submit" className="btn btn-primary" disabled={salvando || semProjetos}>
