@@ -1,21 +1,20 @@
-import { request } from "./api";
+import { ApiError, request } from "./api";
 import { getToken } from "./authService";
+import { montarCorpoRdo, normalizarDiario, resolverUrlArquivo } from "./diarioMapeamento";
 
 // Com VITE_USE_MOCK=true usa dados de exemplo (salvos no navegador, então o que
 // você registrar continua depois de recarregar a página).
-// Com false, chama a API real. AJUSTE os pontos marcados quando o back-end definir o formato.
+// Com false, chama a API real.
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
+const URL_BASE_API = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-// (*) a rota de listagem ainda não existe no back-end: este caminho é uma suposição.
 const LISTAR_PATH = "/api/diarios";
-// Esta rota já existe no back-end (README): recebe { obraId, data, anotacoes }.
 const SYNC_PATH = "/api/rdo/sync";
-// Esta também existe (README): upload multipart, campo "arquivo".
 const ARQUIVOS_PATH = (projetoId) => `/api/projetos/${projetoId}/arquivos`;
 
 const STORAGE_KEY = "se_mock_diarios";
 
-export const MAX_FOTOS = 6;
+export const MAX_FOTOS = 10;
 export const MAX_FOTO_MB = 10;
 
 export const CLIMAS = [
@@ -28,44 +27,19 @@ export const CLIMAS = [
 export const FUNCOES = ["Pedreiros", "Ajudantes", "Eletricistas", "Carpinteiros", "Armadores", "Encanadores", "Pintores"];
 export const EQUIPAMENTOS = ["Betoneira", "Vibrador de Imersão", "Retroescavadeira", "Guincho", "Serra Circular", "Andaime"];
 
-// ---- Adaptadores: traduzem o que a API devolve/recebe ----
-
-const nomeDe = (v) => (typeof v === "string" ? v : v?.nome ?? v?.titulo ?? "");
-
-const urlDe = (f) => (typeof f === "string" ? f : f?.url ?? f?.caminho ?? "");
-
-// Resposta da API -> formato que a tela usa
-function normalizar(d) {
-  const criado = String(d.createdAt ?? "");
-  return {
-    id: d.id,
-    projetoId: d.projetoId ?? d.obraId ?? d.projeto?.id ?? null,
-    projeto: nomeDe(d.projeto) || "(sem projeto)",
-    atividade: d.atividade ?? d.titulo ?? "",
-    data: String(d.data ?? criado).slice(0, 10),
-    hora: d.hora ?? (criado.length >= 16 ? criado.slice(11, 16) : ""),
-    autor: nomeDe(d.engenheiro) || d.autor || "",
-    clima: d.clima ?? "", // (*) ainda não existe no back-end
-    relato: d.descricao ?? d.anotacoes ?? d.relato ?? "",
-    observacoes: d.observacoes ?? "",
-    maoDeObra: Array.isArray(d.maoDeObra) ? d.maoDeObra : [], // (*)
-    equipamentos: Array.isArray(d.equipamentos) ? d.equipamentos : [], // (*)
-    fotos: (Array.isArray(d.fotos) ? d.fotos : []).map(urlDe).filter(Boolean),
-  };
+export function urlDoArquivo(caminho) {
+  return resolverUrlArquivo(caminho, URL_BASE_API);
 }
 
-// Formulário -> corpo enviado para a rota de sync (AJUSTE os nomes dos campos aqui)
-function montarCorpo(d) {
-  return {
-    obraId: String(d.projetoId),
-    data: d.data,
-    anotacoes: d.relato,
-    atividade: d.atividade, // (*) campos extras: o back-end ainda não guarda
-    clima: d.clima,
-    observacoes: d.observacoes,
-    maoDeObra: d.maoDeObra,
-    equipamentos: d.equipamentos,
-  };
+export function validarFoto(arquivo) {
+  const erros = [];
+  if (!/\.(jpe?g|png)$/i.test(arquivo.name)) {
+    erros.push(`"${arquivo.name}": use apenas arquivos .jpg, .jpeg ou .png.`);
+  }
+  if (arquivo.size > MAX_FOTO_MB * 1024 * 1024) {
+    erros.push(`"${arquivo.name}": o tamanho máximo é ${MAX_FOTO_MB} MB.`);
+  }
+  return erros.join(" ");
 }
 
 // ---- Fotos ----
@@ -180,20 +154,29 @@ const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function listarDiarios() {
   if (USE_MOCK) {
     await esperar(500);
-    return lerExemplo().map(normalizar);
+    return lerExemplo()
+      .map((item) => normalizarDiario(item, URL_BASE_API))
+      .sort((a, b) => `${b.data} ${b.hora}`.localeCompare(`${a.data} ${a.hora}`));
   }
   const resposta = await request(LISTAR_PATH, { token: getToken() });
   const lista = Array.isArray(resposta)
     ? resposta
     : resposta?.diarios ?? resposta?.data ?? [];
-  return lista.map(normalizar);
+  return lista.map((item) => normalizarDiario(item, URL_BASE_API));
 }
 
-// dados.fotos = lista de File (arquivos escolhidos no formulário)
-export async function salvarDiario(dados) {
+export async function salvarDiario(dados, { fotosEnviadas = new Map(), onProgresso } = {}) {
+  const fotos = (dados.fotos ?? []).map((foto) => ({
+    id: foto.id ?? foto,
+    arquivo: foto.file ?? foto,
+  }));
+  const errosFotos = fotos.map((foto) => validarFoto(foto.arquivo)).filter(Boolean);
+  if (fotos.length > MAX_FOTOS) errosFotos.push(`Selecione no máximo ${MAX_FOTOS} fotos.`);
+  if (errosFotos.length) throw new ApiError(errosFotos.join(" "), 400);
+
   if (USE_MOCK) {
     await esperar(400);
-    const fotos = await Promise.all(dados.fotos.map((f) => reduzirImagem(f)));
+    const imagens = await Promise.all(fotos.map((foto) => reduzirImagem(foto.arquivo)));
     const agora = new Date();
     const registro = {
       id: Date.now(),
@@ -204,23 +187,41 @@ export async function salvarDiario(dados) {
       hora: agora.toTimeString().slice(0, 5),
       autor: dados.autor,
       clima: dados.clima,
-      relato: dados.relato,
+      relato: dados.descricao,
       observacoes: dados.observacoes,
       maoDeObra: dados.maoDeObra,
       equipamentos: dados.equipamentos,
-      fotos,
+      fotos: imagens,
     };
     gravarExemplo([registro, ...lerExemplo()]);
     return;
   }
 
   const token = getToken();
-  await request(SYNC_PATH, { method: "POST", body: montarCorpo(dados), token });
+  const projetoId = String(dados.projetoId);
+  const caminhos = [];
 
-  // Fotos: uma por vez, pela rota de upload de arquivos do projeto.
-  for (const foto of dados.fotos) {
+  for (const [indice, foto] of fotos.entries()) {
+    const enviada = fotosEnviadas.get(foto.id);
+    if (enviada?.projetoId === projetoId) {
+      caminhos.push(enviada.caminho);
+      continue;
+    }
+    onProgresso?.(`Enviando foto ${indice + 1} de ${fotos.length}…`);
     const form = new FormData();
-    form.append("arquivo", foto);
-    await request(ARQUIVOS_PATH(dados.projetoId), { method: "POST", body: form, token });
+    form.append("arquivo", foto.arquivo);
+    try {
+      const arquivo = await request(ARQUIVOS_PATH(projetoId), { method: "POST", body: form, token });
+      if (typeof arquivo?.caminho !== "string" || !arquivo.caminho.startsWith("/uploads/")) {
+        throw new ApiError("O servidor não devolveu o caminho da foto.", 502);
+      }
+      fotosEnviadas.set(foto.id, { projetoId, caminho: arquivo.caminho });
+      caminhos.push(arquivo.caminho);
+    } catch (err) {
+      throw new ApiError(`Falha ao enviar a foto ${foto.arquivo.name}: ${err.message}`, err.status ?? 0);
+    }
   }
+
+  onProgresso?.("Salvando registro…");
+  return request(SYNC_PATH, { method: "POST", body: montarCorpoRdo(dados, caminhos), token });
 }

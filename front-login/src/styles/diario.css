@@ -321,3 +321,20 @@ dialog.modal.modal-lg {
     width: 100%;
   }
 }
+
+.foto-indisponivel {
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.fotos-detalhe .foto-indisponivel {
+  aspect-ratio: 4 / 3;
+}
+
+.foto-item .foto-indisponivel {
+  height: 100%;
+}
