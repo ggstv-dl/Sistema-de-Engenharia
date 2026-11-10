@@ -1,16 +1,15 @@
 import { request } from "./api";
 import { getToken } from "./authService";
+import { montarCorpoRdo, normalizarDiario, resolverUrlArquivo } from "./diarioMapeamento";
 
 // Com VITE_USE_MOCK=true usa dados de exemplo (salvos no navegador, então o que
 // você registrar continua depois de recarregar a página).
-// Com false, chama a API real. AJUSTE os pontos marcados quando o back-end definir o formato.
+// Com false, chama a API real.
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
+const URL_BASE_API = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-// (*) a rota de listagem ainda não existe no back-end: este caminho é uma suposição.
 const LISTAR_PATH = "/api/diarios";
-// Esta rota já existe no back-end (README): recebe { obraId, data, anotacoes }.
 const SYNC_PATH = "/api/rdo/sync";
-// Esta também existe (README): upload multipart, campo "arquivo".
 const ARQUIVOS_PATH = (projetoId) => `/api/projetos/${projetoId}/arquivos`;
 
 const STORAGE_KEY = "se_mock_diarios";
@@ -28,44 +27,8 @@ export const CLIMAS = [
 export const FUNCOES = ["Pedreiros", "Ajudantes", "Eletricistas", "Carpinteiros", "Armadores", "Encanadores", "Pintores"];
 export const EQUIPAMENTOS = ["Betoneira", "Vibrador de Imersão", "Retroescavadeira", "Guincho", "Serra Circular", "Andaime"];
 
-// ---- Adaptadores: traduzem o que a API devolve/recebe ----
-
-const nomeDe = (v) => (typeof v === "string" ? v : v?.nome ?? v?.titulo ?? "");
-
-const urlDe = (f) => (typeof f === "string" ? f : f?.url ?? f?.caminho ?? "");
-
-// Resposta da API -> formato que a tela usa
-function normalizar(d) {
-  const criado = String(d.createdAt ?? "");
-  return {
-    id: d.id,
-    projetoId: d.projetoId ?? d.obraId ?? d.projeto?.id ?? null,
-    projeto: nomeDe(d.projeto) || "(sem projeto)",
-    atividade: d.atividade ?? d.titulo ?? "",
-    data: String(d.data ?? criado).slice(0, 10),
-    hora: d.hora ?? (criado.length >= 16 ? criado.slice(11, 16) : ""),
-    autor: nomeDe(d.engenheiro) || d.autor || "",
-    clima: d.clima ?? "", // (*) ainda não existe no back-end
-    relato: d.descricao ?? d.anotacoes ?? d.relato ?? "",
-    observacoes: d.observacoes ?? "",
-    maoDeObra: Array.isArray(d.maoDeObra) ? d.maoDeObra : [], // (*)
-    equipamentos: Array.isArray(d.equipamentos) ? d.equipamentos : [], // (*)
-    fotos: (Array.isArray(d.fotos) ? d.fotos : []).map(urlDe).filter(Boolean),
-  };
-}
-
-// Formulário -> corpo enviado para a rota de sync (AJUSTE os nomes dos campos aqui)
-function montarCorpo(d) {
-  return {
-    obraId: String(d.projetoId),
-    data: d.data,
-    anotacoes: d.relato,
-    atividade: d.atividade, // (*) campos extras: o back-end ainda não guarda
-    clima: d.clima,
-    observacoes: d.observacoes,
-    maoDeObra: d.maoDeObra,
-    equipamentos: d.equipamentos,
-  };
+export function urlDoArquivo(caminho) {
+  return resolverUrlArquivo(caminho, URL_BASE_API);
 }
 
 // ---- Fotos ----
@@ -180,13 +143,15 @@ const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function listarDiarios() {
   if (USE_MOCK) {
     await esperar(500);
-    return lerExemplo().map(normalizar);
+    return lerExemplo()
+      .map((item) => normalizarDiario(item, URL_BASE_API))
+      .sort((a, b) => `${b.data} ${b.hora}`.localeCompare(`${a.data} ${a.hora}`));
   }
   const resposta = await request(LISTAR_PATH, { token: getToken() });
   const lista = Array.isArray(resposta)
     ? resposta
     : resposta?.diarios ?? resposta?.data ?? [];
-  return lista.map(normalizar);
+  return lista.map((item) => normalizarDiario(item, URL_BASE_API));
 }
 
 // dados.fotos = lista de File (arquivos escolhidos no formulário)
@@ -204,7 +169,7 @@ export async function salvarDiario(dados) {
       hora: agora.toTimeString().slice(0, 5),
       autor: dados.autor,
       clima: dados.clima,
-      relato: dados.relato,
+      relato: dados.descricao,
       observacoes: dados.observacoes,
       maoDeObra: dados.maoDeObra,
       equipamentos: dados.equipamentos,
@@ -215,7 +180,7 @@ export async function salvarDiario(dados) {
   }
 
   const token = getToken();
-  await request(SYNC_PATH, { method: "POST", body: montarCorpo(dados), token });
+  await request(SYNC_PATH, { method: "POST", body: montarCorpoRdo(dados), token });
 
   // Fotos: uma por vez, pela rota de upload de arquivos do projeto.
   for (const foto of dados.fotos) {

@@ -113,6 +113,13 @@ function CardRegistro({ registro: r, onVer }) {
           <h3 className="reg-label">Relato das atividades</h3>
           <p className="reg-text">{r.relato}</p>
 
+          {r.observacoes && (
+            <>
+              <h3 className="reg-label">Observações</h3>
+              <p className="reg-text">{r.observacoes}</p>
+            </>
+          )}
+
           {r.fotos.length > 0 && (
             <div className="thumbs">
               {visiveis.map((src, i) => (
@@ -249,6 +256,7 @@ function EditorLinhas({ legenda, linhas, setLinhas, campo, sugestoes, placeholde
           <div key={i} className="linha">
             <input
               type="text"
+              maxLength={60}
               list={listaId}
               placeholder={placeholder}
               aria-label={`${legenda}: nome (linha ${i + 1})`}
@@ -258,6 +266,7 @@ function EditorLinhas({ legenda, linhas, setLinhas, campo, sugestoes, placeholde
             <input
               type="number"
               min="1"
+              max="1000"
               step="1"
               inputMode="numeric"
               placeholder="Qtd"
@@ -285,6 +294,7 @@ function EditorLinhas({ legenda, linhas, setLinhas, campo, sugestoes, placeholde
         type="button"
         className="btn btn-sm btn-add"
         onClick={() => setLinhas((ls) => [...ls, { [campo]: "", qtd: "" }])}
+        disabled={linhas.length >= 30}
       >
         <IconPlus size={16} />
         Adicionar linha
@@ -308,7 +318,7 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
     atividade: "",
     data: hojeLocal(),
     clima: "ensolarado",
-    relato: "",
+    descricao: "",
     observacoes: "",
   });
   const [mao, setMao] = useState([{ funcao: "", qtd: "" }]);
@@ -382,13 +392,13 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
       const texto = String(l.qtd).trim();
       if (!nome && !texto) continue;
       const qtd = Number(texto);
-      if (!nome || !Number.isInteger(qtd) || qtd < 1) {
+      if (!nome || nome.length > 60 || !Number.isInteger(qtd) || qtd < 1 || qtd > 1000) {
         invalida = true;
         continue;
       }
       itens.push({ [campo]: nome, qtd });
     }
-    return { itens, invalida };
+    return { itens, invalida: invalida || itens.length > 30 };
   }
 
   async function enviar(e) {
@@ -401,16 +411,18 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
 
     const novos = {};
     if (!projeto) novos.projeto = "Selecione o projeto.";
-    if (form.atividade.trim().length < 3)
-      novos.atividade = "Informe a atividade do dia (mínimo 3 letras).";
+    if (form.atividade.trim().length > 200)
+      novos.atividade = "A atividade deve ter até 200 caracteres.";
     if (!form.data) novos.data = "Informe a data.";
     else if (form.data > hojeLocal()) novos.data = "A data não pode ser no futuro.";
-    if (form.relato.trim().length < 10)
-      novos.relato = "Descreva o relato das atividades (mínimo 10 letras).";
+    if (form.descricao.trim().length < 3 || form.descricao.trim().length > 5000)
+      novos.descricao = "A descrição deve ter entre 3 e 5000 caracteres.";
+    if (form.observacoes.trim().length > 2000)
+      novos.observacoes = "As observações devem ter até 2000 caracteres.";
     if (m.invalida)
-      novos.mao = "Preencha o nome e a quantidade (número maior que zero) em cada linha.";
+      novos.mao = "Use até 30 linhas, com nome de 1 a 60 caracteres e quantidade inteira de 1 a 1000.";
     if (eq.invalida)
-      novos.equip = "Preencha o nome e a quantidade (número maior que zero) em cada linha.";
+      novos.equip = "Use até 30 linhas, com nome de 1 a 60 caracteres e quantidade inteira de 1 a 1000.";
     setErros(novos);
     if (Object.keys(novos).length > 0) return;
 
@@ -422,7 +434,7 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
         atividade: form.atividade.trim(),
         data: form.data,
         clima: form.clima,
-        relato: form.relato.trim(),
+        descricao: form.descricao.trim(),
         observacoes: form.observacoes.trim(),
         maoDeObra: m.itens,
         equipamentos: eq.itens,
@@ -482,6 +494,7 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
               id="atividade"
               type="text"
               placeholder="Ex.: Concretagem da laje"
+              maxLength={200}
               value={form.atividade}
               onChange={mudar("atividade")}
               aria-invalid={Boolean(erros.atividade)}
@@ -511,25 +524,28 @@ function DiarioModal({ projetos, onClose, onSalvo }) {
             </select>
           </Campo>
 
-          <Campo id="relato" rotulo="Relato das atividades" erro={erros.relato} className="span-2">
+          <Campo id="descricao" rotulo="Relato das atividades" erro={erros.descricao} className="span-2">
             <textarea
-              id="relato"
+              id="descricao"
               rows={4}
+              maxLength={5000}
               placeholder="O que foi feito hoje no canteiro?"
-              value={form.relato}
-              onChange={mudar("relato")}
-              aria-invalid={Boolean(erros.relato)}
+              value={form.descricao}
+              onChange={mudar("descricao")}
+              aria-invalid={Boolean(erros.descricao)}
               disabled={salvando}
             />
           </Campo>
 
-          <Campo id="observacoes" rotulo="Observações (opcional)" className="span-2">
+          <Campo id="observacoes" rotulo="Observações (opcional)" erro={erros.observacoes} className="span-2">
             <textarea
               id="observacoes"
               rows={2}
+              maxLength={2000}
               placeholder="Pendências, ocorrências, pedidos de material..."
               value={form.observacoes}
               onChange={mudar("observacoes")}
+              aria-invalid={Boolean(erros.observacoes)}
               disabled={salvando}
             />
           </Campo>
@@ -658,9 +674,7 @@ export default function Diario() {
 
   const filtrados = useMemo(
     () =>
-      registros
-        .filter((r) => filtro === "todos" || r.projeto === filtro)
-        .sort((a, b) => `${b.data} ${b.hora}`.localeCompare(`${a.data} ${a.hora}`)),
+      registros.filter((r) => filtro === "todos" || r.projeto === filtro),
     [registros, filtro]
   );
 
