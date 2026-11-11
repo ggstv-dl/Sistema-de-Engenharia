@@ -127,18 +127,20 @@ Execute o smoke com `npm run smoke` (equivalente a `node scripts/smoke.js`). No 
 | GET | `/api/projetos` | Bearer token | Projetos do engenheiro com cliente e engenheiro. |
 | POST | `/api/projetos` | Bearer token | Cria projeto vinculado ao engenheiro do token. |
 | PUT | `/api/projetos/:id` | Bearer token | Atualização parcial do projeto próprio. |
+| POST | `/api/projetos/:id/orcamentos` | Bearer token | Cria orçamento no projeto próprio, com projeto e cliente; 201. |
+| GET | `/api/projetos/:id/orcamentos` | Bearer token | Lista orçamentos do projeto próprio, mais recentes primeiro. |
+| GET | `/api/orcamentos` | Bearer token | Até 200 orçamentos próprios; filtro opcional projetoId. |
 | POST | `/api/rdo/sync` | Bearer token | Cria diário com projeto e engenheiro; 201. |
 | GET | `/api/diarios` | Bearer token | Até 200 diários próprios; filtro opcional projetoId. |
 | POST | `/api/projetos/:id/arquivos` | Bearer token | Upload multipart no campo arquivo; nova versão, 201. |
 | GET | `/api/projetos/:id/arquivos` | Bearer token | Lista nomes e versões, incluindo criadoEm. |
 | GET | `/api/dashboard` | Bearer token | Indicadores e atividades do engenheiro. |
 
-Contrato detalhado: [docs/contrato-api.md](docs/contrato-api.md). Erros usam `{message}`, exceto o health 503, que retorna `{api, banco}`. O dashboard devolve eficiência nula e progresso vazio; o custo mensal soma orçamentos existentes, sem oferecer endpoints de orçamento.
+Contrato detalhado: [docs/contrato-api.md](docs/contrato-api.md). Erros usam `{message}`, exceto o health 503, que retorna `{api, banco}`. O dashboard devolve eficiência nula e progresso vazio; o custo mensal soma orçamentos com `dataCriacao` no mês corrente, considerando apenas projetos do engenheiro.
 
 ### Previstos, ainda não implementados
 
 - WhatsApp: `POST /api/whatsapp/enviar-orcamento` existe e exige token, mas sempre responde 501 após autenticação. Não há envio real ou provider simulado no servidor.
-- Orçamentos: GET/POST `/api/projetos/:id/orcamentos` não estão registrados; com token válido retornam 404. Há modelo e dados de seed, sem API funcional.
 - Relatórios, consulta SINAPI e geração automática de PDF não possuem endpoints. A impressão de orçamento no front e relatórios mock não comprovam implementação no backend.
 
 ## Autenticação e autorização

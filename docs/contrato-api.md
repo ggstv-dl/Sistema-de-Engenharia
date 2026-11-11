@@ -1,6 +1,6 @@
 # Contrato da API do MVP
 
-Este documento descreve o comportamento implementado; funcionalidades futuras estão identificadas nas seções correspondentes. Auth, raiz, health, dashboard, clientes, projetos (listar, criar e editar), sync do RDO, listagem de diários e arquivos (upload versionado e listagem) já existem. WhatsApp continua respondendo **501** após autenticação; os demais endpoints abaixo ainda serão implementados.
+Este documento descreve o comportamento implementado; funcionalidades futuras estão identificadas nas seções correspondentes. Auth, raiz, health, dashboard, clientes, projetos (listar, criar e editar), sync do RDO, listagem de diários, arquivos (upload versionado e listagem) e orçamentos já existem. WhatsApp continua respondendo **501** após autenticação, conforme a seção de funcionalidades previstas.
 
 ## Regras gerais
 
@@ -88,9 +88,27 @@ No sync, `projetoId` deve ser uma string não vazia; `descricao`, após trim, de
 
 `fotos` contém até 10 caminhos de até 255 caracteres, começando com `/uploads/` e sem `..`. O sync valida o formato dos caminhos, sem verificar a existência física dos arquivos. `maoDeObra` e `equipamentos` aceitam até 30 objetos cada; `funcao`/`nome`, após trim, devem ter de 1 a 60 caracteres, e `qtd` deve ser um inteiro de 1 a 1000. Erros de validação identificam o campo inválido.
 
-## Orçamentos — previsto, ainda não implementado
+## Orçamentos
 
-Não existem rotas GET/POST `/api/projetos/:id/orcamentos`. Com token válido, essas requisições retornam **404** `{message: "Rota não encontrada."}`. O modelo Prisma e os dados do seed não constituem uma API de orçamento. Esta seção não define resposta 200/201 como comportamento atual.
+As três rotas exigem Bearer token. Cada orçamento retorna `{id, projetoId, nome, descricao, valor, dataCriacao, projeto: {id, titulo, cliente: {id, nome, telefone}}}`. `valor` é um número JSON, conforme o campo `Float` do schema. `descricao` pode retornar `null`.
+
+| Método e rota | Autenticação | Corpo | Sucesso | Erros |
+|---|---|---|---|---|
+| `POST /api/projetos/:id/orcamentos` | Bearer | `{nome, descricao?, valor}` | **201** orçamento com projeto e cliente | 400, 401, 404, 500 |
+| `GET /api/projetos/:id/orcamentos` | Bearer | Nenhum | **200** array de orçamentos do projeto | 401, 404, 500 |
+| `GET /api/orcamentos` | Bearer | Nenhum; query opcional `?projetoId=<id>` | **200** até 200 orçamentos de projetos do engenheiro | 400, 401, 500 |
+
+No POST, `nome` deve ser string de 3 a 150 caracteres após trim. `descricao` é uma string opcional, de até 2000 caracteres após trim; ausente, vazia ou só com espaços é gravada como `null`. `null` explícito e outros tipos são inválidos. `valor` deve ser um número finito, maior que zero, no máximo `999999999.99` e com até duas casas decimais; strings numéricas não são aceitas. Cada entrada inválida responde **400** `{message}` identificando o campo.
+
+Exemplo de corpo: `{ "nome": "Orçamento demonstração", "descricao": "Estrutura e alvenaria", "valor": 12500.5 }`.
+
+O projeto indicado no caminho deve existir e pertencer ao engenheiro do token, tanto no POST quanto no GET por projeto. Caso contrário, a resposta é **404** `{message: "Projeto não encontrado."}`. O identificador do orçamento e `dataCriacao` são definidos pelo servidor; `projetoId`, `engenheiroId`, datas e quaisquer campos extras no corpo são ignorados.
+
+As duas listagens ordenam por `dataCriacao` decrescente e, em empate, por `id` decrescente. O GET por projeto retorna todos os seus orçamentos; o GET global limita a 200 registros. O filtro global `projetoId` deve ser uma string não vazia após trim; parâmetro vazio, repetido ou em formato de lista/objeto responde **400** `{message: "Informe um projetoId válido."}`.
+
+O GET global sempre filtra pela relação `projeto.engenheiroId`. Filtrar um projeto inexistente ou de outro engenheiro retorna **200** `[]`, sem expor sua existência. Token ausente, inválido ou expirado responde **401** nas três rotas. Os dados de projeto e cliente vêm no mesmo `select` do orçamento, sem consultas por item.
+
+O dashboard soma `valor` dos orçamentos de projetos do engenheiro com `dataCriacao` a partir do início do mês corrente. Orçamentos criados agora participam dessa soma.
 
 ## WhatsApp — previsto, ainda não implementado
 
