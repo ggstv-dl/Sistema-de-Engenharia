@@ -1,15 +1,13 @@
-import { request } from "./api";
+import { ApiError, request } from "./api";
 import { getToken } from "./authService";
+import { montarCorpoOrcamento, normalizarOrcamento } from "./orcamentoMapeamento";
 
 // Com VITE_USE_MOCK=true usa dados de exemplo (salvos no navegador).
-// Com false, chama a API real. AJUSTE os pontos marcados quando o back-end definir o formato.
+// Com false, chama a API real.
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 
-// (*) rotas ainda não existentes no back-end: caminhos suposições.
 const ORCAMENTOS_PATH = "/api/orcamentos";
 const SINAPI_PATH = "/api/sinapi"; // GET ?busca=texto
-// Esta rota já existe no back-end (README).
-const WHATSAPP_PATH = "/api/whatsapp/enviar-orcamento";
 
 const STORAGE_KEY = "se_mock_orcamentos";
 
@@ -49,24 +47,6 @@ function normalizar(o) {
     itens: Array.isArray(o.itens) ? o.itens : [],
     status: o.status ?? "rascunho",
     criadoEm: String(o.criadoEm ?? o.createdAt ?? "").slice(0, 10),
-  };
-}
-
-function montarCorpo(d) {
-  return {
-    projetoId: d.projetoId,
-    cliente: d.cliente,
-    telefone: d.telefone,
-    validade: d.validade,
-    observacoes: d.observacoes,
-    bdi: Number(d.bdi) || 0,
-    itens: d.itens.map((i) => ({
-      codigo: i.codigo,
-      descricao: i.descricao,
-      unidade: i.unidade,
-      qtd: Number(i.qtd),
-      preco: Number(i.preco),
-    })),
   };
 }
 
@@ -172,7 +152,7 @@ export async function listarOrcamentos() {
   }
   const resposta = await request(ORCAMENTOS_PATH, { token: getToken() });
   const lista = Array.isArray(resposta) ? resposta : resposta?.orcamentos ?? resposta?.data ?? [];
-  return lista.map(normalizar);
+  return lista.map(normalizarOrcamento);
 }
 
 // Consulta de preços (SINAPI). Devolve [{ codigo, descricao, unidade, preco }]
@@ -220,15 +200,21 @@ export async function salvarOrcamento(dados) {
     gravar(lista);
     return normalizar(salvo);
   }
-  const corpo = montarCorpo(dados);
-  const token = getToken();
-  const resp = dados.id
-    ? await request(`${ORCAMENTOS_PATH}/${dados.id}`, { method: "PUT", body: corpo, token })
-    : await request(ORCAMENTOS_PATH, { method: "POST", body: corpo, token });
-  return normalizar({ ...dados, ...(resp?.orcamento ?? resp ?? {}) });
+  if (dados.id) {
+    throw new ApiError("A edição de orçamentos não está disponível.", 405);
+  }
+  if (typeof dados.projetoId !== "string" || !dados.projetoId.trim()) {
+    throw new ApiError("Selecione um projeto para criar o orçamento.", 400);
+  }
+  const corpo = montarCorpoOrcamento(dados);
+  const resp = await request(`/api/projetos/${encodeURIComponent(dados.projetoId.trim())}/orcamentos`, {
+    method: "POST",
+    body: corpo,
+    token: getToken(),
+  });
+  return normalizarOrcamento(resp);
 }
 
-// Envia o orçamento pelo WhatsApp (rota já existente no back-end).
 export async function enviarWhatsapp(orc, mensagem) {
   if (USE_MOCK) {
     await esperar(700);
@@ -240,14 +226,5 @@ export async function enviarWhatsapp(orc, mensagem) {
     }
     return;
   }
-  // (*) corpo assumido: o README não detalha os campos.
-  await request(WHATSAPP_PATH, {
-    method: "POST",
-    token: getToken(),
-    body: {
-      orcamentoId: orc.id,
-      telefone: orc.telefone.replace(/\D/g, ""),
-      mensagem,
-    },
-  });
+  throw new ApiError("Use o link do WhatsApp para enviar ao cliente.", 400);
 }
