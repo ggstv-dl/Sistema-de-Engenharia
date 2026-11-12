@@ -10,12 +10,14 @@ import {
   STATUS_ORC,
 } from "../services/orcamentosService";
 import { listarProjetos } from "../services/projetosService";
+import { converterValor, montarLinkWhatsapp, montarMensagemWhatsapp, normalizarTelefoneBR } from "../services/orcamentoMapeamento";
 import { IconPlus, IconClose, IconSearch, IconTrash, IconCheck, IconDownload } from "../components/icons";
 import "../styles/projetos.css";
 import "../styles/diario.css";
 import "../styles/orcamentos.css";
 
 const PASSOS = ["Dados", "Itens (SINAPI)", "Prévia", "Enviar"];
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 const ROTULO_STATUS = Object.fromEntries(STATUS_ORC.map((s) => [s.valor, s.rotulo]));
 
 const doisDigitos = (n) => String(n).padStart(2, "0");
@@ -169,7 +171,7 @@ function Campo({ id, rotulo, erro, className = "", children }) {
       <label htmlFor={id}>{rotulo}</label>
       {children}
       {erro && (
-        <span className="error" role="alert">
+        <span id={`${id}-erro`} className="error" role="alert">
           {erro}
         </span>
       )}
@@ -678,6 +680,186 @@ function OrcamentoModal({ inicial, projetos, onClose, onMudou }) {
   );
 }
 
+function OrcamentoRealModal({ inicial, onClose, onMudou }) {
+  const ref = useRef(null);
+  const [form, setForm] = useState({ projetoId: "", nome: "", descricao: "", valor: "" });
+  const [projetos, setProjetos] = useState([]);
+  const [carregandoProjetos, setCarregandoProjetos] = useState(!inicial);
+  const [erroProjetos, setErroProjetos] = useState("");
+  const [erros, setErros] = useState({});
+  const [erroServidor, setErroServidor] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const [avisoWhatsapp, setAvisoWhatsapp] = useState("");
+  const [confirmacaoCopia, setConfirmacaoCopia] = useState("");
+  const [mostrarMensagem, setMostrarMensagem] = useState(false);
+
+  const carregarProjetos = useCallback(async () => {
+    setCarregandoProjetos(true);
+    setErroProjetos("");
+    try {
+      setProjetos(await listarProjetos());
+    } catch (err) {
+      setErroProjetos(err.message || "Não foi possível carregar os projetos.");
+    } finally {
+      setCarregandoProjetos(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (ref.current && !ref.current.open) ref.current.showModal();
+  }, []);
+
+  useEffect(() => {
+    if (!inicial) carregarProjetos();
+  }, [inicial, carregarProjetos]);
+
+  const mudar = (campo) => (e) => setForm((atual) => ({ ...atual, [campo]: e.target.value }));
+  const projeto = projetos.find((item) => String(item.id) === form.projetoId);
+
+  function enviarAoCliente() {
+    setAvisoWhatsapp("");
+    if (!normalizarTelefoneBR(inicial.telefone)) {
+      const aviso = "Telefone do cliente inválido ou ausente. O WhatsApp vai abrir sem contato; escolha o destinatário.";
+      setAvisoWhatsapp(aviso);
+      window.alert(aviso);
+    }
+    window.open(montarLinkWhatsapp(inicial), "_blank", "noopener,noreferrer");
+  }
+
+  async function copiarMensagem() {
+    setConfirmacaoCopia("");
+    try {
+      await navigator.clipboard.writeText(montarMensagemWhatsapp(inicial));
+      setMostrarMensagem(false);
+      setConfirmacaoCopia("Mensagem copiada.");
+    } catch {
+      setMostrarMensagem(true);
+    }
+  }
+
+  async function enviar(e) {
+    e.preventDefault();
+    if (salvando || carregandoProjetos || erroProjetos) return;
+    setErroServidor("");
+    const novos = {};
+    if (!projeto) novos.projeto = "Selecione um projeto.";
+    if (form.nome.trim().length < 3 || form.nome.trim().length > 150)
+      novos.nome = "O nome deve ter entre 3 e 150 caracteres.";
+    if (form.descricao.trim().length > 2000)
+      novos.descricao = "A descrição deve ter até 2000 caracteres.";
+    try {
+      converterValor(form.valor);
+    } catch (err) {
+      novos.valor = err.message;
+    }
+    setErros(novos);
+    if (Object.keys(novos).length) return;
+
+    setSalvando(true);
+    try {
+      await salvarOrcamento(form);
+      onMudou();
+      onClose();
+    } catch (err) {
+      setErroServidor(err.message || "Não foi possível salvar o orçamento.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <dialog
+      ref={ref}
+      className="modal"
+      aria-labelledby="orc-real-titulo"
+      onClose={onClose}
+      onCancel={(e) => {
+        if (salvando) e.preventDefault();
+      }}
+      onClick={(e) => {
+        if (e.target === ref.current && !salvando) ref.current.close();
+      }}
+    >
+      <header className="modal-header">
+        <h2 id="orc-real-titulo">{inicial ? inicial.nome : "Novo Orçamento"}</h2>
+        <button type="button" className="icon-btn" aria-label="Fechar" disabled={salvando} onClick={() => ref.current.close()}>
+          <IconClose size={18} />
+        </button>
+      </header>
+
+      {inicial ? (
+        <>
+          <div className="modal-body">
+            <dl className="previa-dados">
+              <div><dt>Projeto</dt><dd>{inicial.projeto}</dd></div>
+              <div><dt>Cliente</dt><dd>{inicial.cliente}</dd></div>
+              <div><dt>Criado em</dt><dd>{inicial.criadoEm}</dd></div>
+              <div><dt>Valor</dt><dd>{moeda(inicial.valor)}</dd></div>
+            </dl>
+            {inicial.descricao && <p className="reg-text">{inicial.descricao}</p>}
+            <p className="cell-sub">O WhatsApp será aberto com a mensagem pronta, usando a conta do engenheiro.</p>
+            <div className="previa-acoes">
+              <button type="button" className="btn btn-primary" onClick={enviarAoCliente}>Enviar ao cliente</button>
+              <button type="button" className="btn" onClick={copiarMensagem}>Copiar mensagem</button>
+            </div>
+            {avisoWhatsapp && <p className="cell-sub" role="alert">{avisoWhatsapp}</p>}
+            {confirmacaoCopia && <p className="cell-sub" role="status">{confirmacaoCopia}</p>}
+            {mostrarMensagem && (
+              <Campo id="o-mensagem" rotulo="Selecione e copie a mensagem">
+                <textarea id="o-mensagem" rows={8} readOnly value={montarMensagemWhatsapp(inicial)} onFocus={(e) => e.target.select()} />
+              </Campo>
+            )}
+          </div>
+          <footer className="modal-footer">
+            <button type="button" className="btn" onClick={() => ref.current.close()}>Fechar</button>
+          </footer>
+        </>
+      ) : (
+        <form onSubmit={enviar} noValidate>
+          <div className="modal-body form-grid">
+            <Campo id="o-projeto" rotulo="Projeto" erro={erros.projeto} className="span-2">
+              <select
+                id="o-projeto"
+                value={form.projetoId}
+                onChange={mudar("projetoId")}
+                disabled={salvando || carregandoProjetos || Boolean(erroProjetos)}
+                aria-busy={carregandoProjetos}
+                aria-invalid={Boolean(erros.projeto || erroProjetos)}
+              >
+                <option value="">{carregandoProjetos ? "Carregando projetos…" : projetos.length ? "Selecione o projeto" : "Nenhum projeto cadastrado"}</option>
+                {projetos.map((item) => <option key={item.id} value={item.id}>{item.titulo}</option>)}
+              </select>
+              {erroProjetos && (
+                <>
+                  <span className="error" role="alert">{erroProjetos}</span>
+                  <button type="button" className="btn" onClick={carregarProjetos} disabled={salvando}>Tentar de novo</button>
+                </>
+              )}
+            </Campo>
+            {projeto && <p className="span-2 cell-sub">Cliente: {projeto.cliente}</p>}
+            <Campo id="o-nome" rotulo="Nome" erro={erros.nome} className="span-2">
+              <input id="o-nome" value={form.nome} maxLength={150} onChange={mudar("nome")} disabled={salvando} aria-invalid={Boolean(erros.nome)} />
+            </Campo>
+            <Campo id="o-descricao" rotulo="Descrição (opcional)" erro={erros.descricao} className="span-2">
+              <textarea id="o-descricao" value={form.descricao} maxLength={2000} rows={4} onChange={mudar("descricao")} disabled={salvando} aria-invalid={Boolean(erros.descricao)} />
+            </Campo>
+            <Campo id="o-valor" rotulo="Valor (R$)" erro={erros.valor} className="span-2">
+              <input id="o-valor" type="text" inputMode="decimal" placeholder="12.500,50" value={form.valor} onChange={mudar("valor")} disabled={salvando} aria-invalid={Boolean(erros.valor)} />
+            </Campo>
+          </div>
+          {erroServidor && <div className="server-error modal-erro" role="alert">{erroServidor}</div>}
+          <footer className="modal-footer">
+            <button type="button" className="btn" disabled={salvando} onClick={() => ref.current.close()}>Cancelar</button>
+            <button type="submit" className="btn btn-primary" disabled={salvando || carregandoProjetos || Boolean(erroProjetos) || !projetos.length}>
+              {salvando ? "Salvando…" : "Salvar orçamento"}
+            </button>
+          </footer>
+        </form>
+      )}
+    </dialog>
+  );
+}
+
 // ---- Página ----
 
 export default function Orcamentos() {
@@ -703,27 +885,27 @@ export default function Orcamentos() {
   useEffect(() => {
     carregar();
     // A lista de projetos só alimenta o formulário: se falhar, a página continua funcionando.
-    listarProjetos()
+    if (USE_MOCK) listarProjetos()
       .then(setProjetos)
       .catch(() => setProjetos([]));
   }, [carregar]);
 
   const filtrados = useMemo(
     () =>
-      lista
+      USE_MOCK ? lista
         .filter((o) => filtro === "todos" || o.status === filtro)
-        .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm)),
+        .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm)) : lista,
     [lista, filtro]
   );
 
-  const totalGeral = useMemo(() => filtrados.reduce((s, o) => s + totais(o).total, 0), [filtrados]);
+  const totalGeral = useMemo(() => filtrados.reduce((s, o) => s + (USE_MOCK ? totais(o).total : o.valor), 0), [filtrados]);
 
   return (
     <>
       <header className="page-header">
         <div>
           <h1>Orçamentos</h1>
-          <p className="page-subtitle">Monte o orçamento com preços SINAPI e envie ao cliente</p>
+          <p className="page-subtitle">{USE_MOCK ? "Monte o orçamento com preços SINAPI e envie ao cliente" : "Cadastre e consulte os orçamentos dos seus projetos"}</p>
         </div>
         <div className="page-actions">
           <button type="button" className="btn btn-primary" onClick={() => setAberto("novo")}>
@@ -733,7 +915,7 @@ export default function Orcamentos() {
         </div>
       </header>
 
-      <div className="toolbar">
+      {USE_MOCK && <div className="toolbar">
         <div className="chips" role="group" aria-label="Filtrar por situação">
           {[{ valor: "todos", rotulo: "Todos" }, ...STATUS_ORC].map((s) => (
             <button
@@ -747,7 +929,7 @@ export default function Orcamentos() {
             </button>
           ))}
         </div>
-      </div>
+      </div>}
 
       {carregando && <div className="skeleton skeleton-card" aria-busy="true" aria-label="Carregando orçamentos" />}
 
@@ -755,14 +937,14 @@ export default function Orcamentos() {
         <div className="card state state-error" role="alert">
           <p>{erro}</p>
           <button type="button" className="btn" onClick={carregar}>
-            Tentar novamente
+            Tentar de novo
           </button>
         </div>
       )}
 
       {!carregando && !erro && lista.length === 0 && (
         <div className="card state">
-          <p>Nenhum orçamento criado.</p>
+          <p>{USE_MOCK ? "Nenhum orçamento criado." : "Nenhum orçamento ainda."}</p>
           <button type="button" className="btn btn-primary" onClick={() => setAberto("novo")}>
             Criar primeiro orçamento
           </button>
@@ -784,13 +966,13 @@ export default function Orcamentos() {
             <table className="tabela">
               <thead>
                 <tr>
-                  <th>Número</th>
+                  <th>{USE_MOCK ? "Número" : "Nome"}</th>
                   <th>Projeto / Cliente</th>
                   <th>Criado em</th>
-                  <th>Validade</th>
-                  <th className="num">Itens</th>
+                  {USE_MOCK && <th>Validade</th>}
+                  {USE_MOCK && <th className="num">Itens</th>}
                   <th className="num">Total</th>
-                  <th>Situação</th>
+                  {USE_MOCK && <th>Situação</th>}
                   <th>
                     <span className="sr-only">Ações</span>
                   </th>
@@ -800,21 +982,21 @@ export default function Orcamentos() {
                 {filtrados.map((o) => (
                   <tr key={o.id}>
                     <td>
-                      <strong>{o.numero}</strong>
+                      <strong>{USE_MOCK ? o.numero : o.nome}</strong>
                     </td>
                     <td className="orc-projeto">
                       {o.projeto}
                       <span className="cell-sub">{o.cliente}</span>
                     </td>
-                    <td>{formatarData(o.criadoEm)}</td>
-                    <td>{formatarData(o.validade)}</td>
-                    <td className="num">{o.itens.length}</td>
+                    <td>{USE_MOCK ? formatarData(o.criadoEm) : o.criadoEm}</td>
+                    {USE_MOCK && <td>{formatarData(o.validade)}</td>}
+                    {USE_MOCK && <td className="num">{o.itens.length}</td>}
                     <td className="num">
-                      <strong>{moeda(totais(o).total)}</strong>
+                      <strong>{moeda(USE_MOCK ? totais(o).total : o.valor)}</strong>
                     </td>
-                    <td>
+                    {USE_MOCK && <td>
                       <span className={`badge badge-orc-${o.status}`}>{ROTULO_STATUS[o.status] ?? o.status}</span>
-                    </td>
+                    </td>}
                     <td>
                       <button type="button" className="btn btn-sm" onClick={() => setAberto(o)}>
                         Abrir
@@ -835,9 +1017,13 @@ export default function Orcamentos() {
       )}
 
       {aberto && (
-        <OrcamentoModal
+        USE_MOCK ? <OrcamentoModal
           inicial={aberto === "novo" ? null : aberto}
           projetos={projetos}
+          onClose={() => setAberto(null)}
+          onMudou={carregar}
+        /> : <OrcamentoRealModal
+          inicial={aberto === "novo" ? null : aberto}
           onClose={() => setAberto(null)}
           onMudou={carregar}
         />
