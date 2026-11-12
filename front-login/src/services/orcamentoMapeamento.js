@@ -46,3 +46,30 @@ export function normalizarOrcamento(itemDaApi) {
     criadoEm: data && !Number.isNaN(data.getTime()) ? data.toLocaleDateString("pt-BR") : "",
   };
 }
+
+export function normalizarTelefoneBR(texto) {
+  const digitos = String(texto ?? "").replace(/\D/g, "");
+  if (digitos.length === 10 || digitos.length === 11) return `55${digitos}`;
+  if ((digitos.length === 12 || digitos.length === 13) && digitos.startsWith("55")) return digitos;
+  return null;
+}
+
+const emUmaLinha = (texto) => String(texto ?? "").replace(/\s+/g, " ").trim();
+
+export function montarMensagemWhatsapp(orcamento) {
+  const primeiroNome = emUmaLinha(orcamento.cliente).split(" ")[0];
+  const valor = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })
+    .format(converterValor(orcamento.valor)).replace(/[\u00a0\u202f]/g, " ");
+  const descricao = emUmaLinha(orcamento.descricao);
+  return [
+    primeiroNome ? `Olá, ${primeiroNome}!` : "Olá!",
+    `Segue o orçamento "${emUmaLinha(orcamento.nome)}" da obra "${emUmaLinha(orcamento.projeto)}", no valor de ${valor}.`,
+    ...(descricao ? [`Descrição: ${descricao}`] : []),
+    "Fico à disposição.",
+  ].join("\n\n");
+}
+
+export function montarLinkWhatsapp(orcamento) {
+  const telefone = normalizarTelefoneBR(orcamento.telefone);
+  return `https://wa.me/${telefone ?? ""}?text=${encodeURIComponent(montarMensagemWhatsapp(orcamento))}`;
+}

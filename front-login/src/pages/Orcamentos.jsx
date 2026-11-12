@@ -10,7 +10,7 @@ import {
   STATUS_ORC,
 } from "../services/orcamentosService";
 import { listarProjetos } from "../services/projetosService";
-import { converterValor } from "../services/orcamentoMapeamento";
+import { converterValor, montarLinkWhatsapp, montarMensagemWhatsapp, normalizarTelefoneBR } from "../services/orcamentoMapeamento";
 import { IconPlus, IconClose, IconSearch, IconTrash, IconCheck, IconDownload } from "../components/icons";
 import "../styles/projetos.css";
 import "../styles/diario.css";
@@ -689,6 +689,9 @@ function OrcamentoRealModal({ inicial, onClose, onMudou }) {
   const [erros, setErros] = useState({});
   const [erroServidor, setErroServidor] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [avisoWhatsapp, setAvisoWhatsapp] = useState("");
+  const [confirmacaoCopia, setConfirmacaoCopia] = useState("");
+  const [mostrarMensagem, setMostrarMensagem] = useState(false);
 
   const carregarProjetos = useCallback(async () => {
     setCarregandoProjetos(true);
@@ -712,6 +715,27 @@ function OrcamentoRealModal({ inicial, onClose, onMudou }) {
 
   const mudar = (campo) => (e) => setForm((atual) => ({ ...atual, [campo]: e.target.value }));
   const projeto = projetos.find((item) => String(item.id) === form.projetoId);
+
+  function enviarAoCliente() {
+    setAvisoWhatsapp("");
+    if (!normalizarTelefoneBR(inicial.telefone)) {
+      const aviso = "Telefone do cliente inválido ou ausente. O WhatsApp vai abrir sem contato; escolha o destinatário.";
+      setAvisoWhatsapp(aviso);
+      window.alert(aviso);
+    }
+    window.open(montarLinkWhatsapp(inicial), "_blank", "noopener,noreferrer");
+  }
+
+  async function copiarMensagem() {
+    setConfirmacaoCopia("");
+    try {
+      await navigator.clipboard.writeText(montarMensagemWhatsapp(inicial));
+      setMostrarMensagem(false);
+      setConfirmacaoCopia("Mensagem copiada.");
+    } catch {
+      setMostrarMensagem(true);
+    }
+  }
 
   async function enviar(e) {
     e.preventDefault();
@@ -773,6 +797,18 @@ function OrcamentoRealModal({ inicial, onClose, onMudou }) {
               <div><dt>Valor</dt><dd>{moeda(inicial.valor)}</dd></div>
             </dl>
             {inicial.descricao && <p className="reg-text">{inicial.descricao}</p>}
+            <p className="cell-sub">O WhatsApp será aberto com a mensagem pronta, usando a conta do engenheiro.</p>
+            <div className="previa-acoes">
+              <button type="button" className="btn btn-primary" onClick={enviarAoCliente}>Enviar ao cliente</button>
+              <button type="button" className="btn" onClick={copiarMensagem}>Copiar mensagem</button>
+            </div>
+            {avisoWhatsapp && <p className="cell-sub" role="alert">{avisoWhatsapp}</p>}
+            {confirmacaoCopia && <p className="cell-sub" role="status">{confirmacaoCopia}</p>}
+            {mostrarMensagem && (
+              <Campo id="o-mensagem" rotulo="Selecione e copie a mensagem">
+                <textarea id="o-mensagem" rows={8} readOnly value={montarMensagemWhatsapp(inicial)} onFocus={(e) => e.target.select()} />
+              </Campo>
+            )}
           </div>
           <footer className="modal-footer">
             <button type="button" className="btn" onClick={() => ref.current.close()}>Fechar</button>
