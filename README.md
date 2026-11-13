@@ -1,7 +1,7 @@
 # CRM Engenheiro Civil — TED 03
 
-API para autenticação de engenheiros, cadastro de clientes e projetos, diários de obra e arquivos versionados.
-Os endpoints implementados são exercitados pela coleção Postman e pelo smoke; orçamento e WhatsApp ainda não têm fluxo funcional.
+API para autenticação de engenheiros, cadastro de clientes e projetos, diários de obra, arquivos versionados e orçamentos.
+O front usa esses fluxos com a API real e abre o WhatsApp do engenheiro por link `wa.me` com mensagem pronta. A integração oficial de WhatsApp no servidor continua respondendo 501.
 Stack: Node.js/CommonJS, Express 4, Prisma 6, PostgreSQL, JWT, bcrypt e multer; front React 18 com Vite 5.
 
 Equipe: Gustavo Barros Martins, Hugo Alexandre Carvalho Coelho Coutinho, Jeferson Machado dos Santos e Maicon de Sousa Pontes.
@@ -70,7 +70,7 @@ VITE_API_URL=http://localhost:3000
 VITE_USE_MOCK=false
 ```
 
-Se existir `.env.local`, ele tem precedência e precisa conter os mesmos valores. Inicie com `npm run dev` dentro de `front-login/` e abra `http://localhost:5173`. O exemplo do front usa mock por padrão. Desativá-lo não conclui as integrações pendentes: o formulário de novo projeto ainda não seleciona `clienteId`, o RDO envia `obraId`/`anotacoes`, e orçamento/relatórios usam rotas ausentes.
+Se existir `.env.local`, ele tem precedência e precisa conter os mesmos valores. Inicie com `npm run dev` dentro de `front-login/` e abra `http://localhost:5173`. O exemplo do front usa `VITE_USE_MOCK=false`. Projetos permitem selecionar ou cadastrar cliente; o RDO envia fotos antes do registro; orçamentos permitem criar, listar, abrir o link do WhatsApp e copiar a mensagem. SINAPI, itens/BDI, status e impressão do orçamento permanecem no mock; relatórios não aparecem no menu e não têm API implementada.
 
 ## Usuários do seed
 
@@ -79,7 +79,7 @@ Se existir `.env.local`, ele tem precedência e precisa conter os mesmos valores
 | João Silva | `joao@engineer.com` | `123456` |
 | Maria Oliveira | `maria@engineer.com` | `123456` |
 
-O seed também cria clientes, Green Valley para João e Predial Centro-Sul para Maria. Diários e orçamentos demo têm datas de 2024; referências de arquivos do seed não criam arquivos físicos. O registro público exige senha de 8 a 72 caracteres; as contas do seed são criadas diretamente com a senha demo acima.
+O seed também cria clientes, Green Valley para João e Predial Centro-Sul para Maria. Diários usam hoje/ontem, os projetos começam 30/60 dias atrás e os orçamentos usam `dataCriacao` no mês corrente. Referências de arquivos e fotos do seed não criam arquivos físicos. Os filhos só são criados junto de projetos novos; repetir o seed não atualiza suas datas. O registro público exige senha de 8 a 72 caracteres; as contas do seed são criadas diretamente com a senha demo acima.
 
 ## Scripts npm disponíveis
 
@@ -95,6 +95,7 @@ Tabela extraída dos nomes e comandos existentes no `package.json` da raiz:
 | `npm run db:studio` | `prisma studio` |
 | `npm run check` | `node scripts/check.js` |
 | `npm run smoke` | `node scripts/smoke.js` |
+| `npm run postman:run` | `npx --yes newman run docs/postman/crm-engenharia.postman_collection.json -e docs/postman/local.postman_environment.json --working-dir docs/postman` |
 
 Execute o smoke com `npm run smoke` (equivalente a `node scripts/smoke.js`). No front, os scripts existentes são `dev`, `build` e `preview`. O backend é JavaScript e não possui etapa de build.
 
@@ -147,7 +148,7 @@ Contrato detalhado: [docs/contrato-api.md](docs/contrato-api.md). Erros usam `{m
 
 O login compara o hash bcrypt e emite JWT, com validade padrão de oito horas, configurável por `JWT_EXPIRES_IN`. Use `Authorization: Bearer <token>`. Token ausente, inválido ou expirado retorna 401.
 
-Cada engenheiro lista seus próprios projetos e diários. Alterar projeto alheio, sincronizar RDO nele ou listar/enviar seus arquivos retorna 404. Filtrar diários por projeto alheio ou inexistente retorna 200 com lista vazia. Clientes são globais, conforme o schema; não têm dono por engenheiro.
+Cada engenheiro lista seus próprios projetos, diários e orçamentos. Alterar projeto alheio, sincronizar RDO nele, listar/enviar seus arquivos ou criar/listar seus orçamentos por projeto retorna 404. Filtrar a listagem global de diários ou orçamentos por projeto alheio ou inexistente retorna 200 com lista vazia. Clientes são globais, conforme o schema; não têm dono por engenheiro.
 
 No MVP, `/uploads/<uuid>.<ext>` é **público**, sem JWT, para permitir `<img>`. O nome UUID dificulta descobrir o caminho; quem conhece a URL pode baixar o arquivo. Somente esse prefixo usa `Cross-Origin-Resource-Policy: cross-origin`; a API mantém `same-origin`. Imagens JPG/JPEG/PNG são inline; documentos são attachment. O upload aceita PDF, DWG, RVT, JPG, JPEG e PNG, com validação de assinatura em PDF/imagens e limite configurável. Mesmo nome no mesmo projeto cria outra versão, sem apagar as anteriores.
 
@@ -160,11 +161,11 @@ npm run check
 npm run smoke
 ```
 
-O smoke usa apenas recursos nativos de Node: fetch, FormData e Blob. Sua URL vem de `SMOKE_BASE_URL`, com padrão `http://localhost:3000`. Ele testa saúde, logins, cliente, projeto, edição, RDO, upload/versionamento, autorização e validações; imprime OK/FALHOU por passo e retorna código 1 se houver falha.
+O smoke usa apenas recursos nativos de Node: fetch, FormData e Blob. Sua URL vem de `SMOKE_BASE_URL`, com padrão `http://localhost:3000`. São **46 passos** de saúde, logins, cliente, projeto, edição, RDO, orçamentos, upload/versionamento, autorização e validações; imprime OK/FALHOU por passo e retorna código 1 se houver falha. A cobertura de orçamentos verifica criação, valor numérico, cliente embutido, listagens, valor zero/string, isolamento da Maria e as três rotas sem token. A meta é `46 OK, 0 FALHOU`.
 
 **Smoke e coleção deixam dados de teste no banco e arquivos no diretório de upload. Não executam limpeza nem reset.** O smoke mantém também as verificações anteriores de senha incorreta, dashboard sem token e dados do seed.
 
-No Postman, importe `docs/postman/crm-engenharia.postman_collection.json` e `docs/postman/local.postman_environment.json`, selecione o ambiente local e configure o working directory para `docs/postman`. Execute a coleção completa no Collection Runner, na ordem das oito pastas. Os tokens e IDs começam vazios e são preenchidos pelos testes; um novo projeto por execução mantém as versões do PDF em 1 e 2. O teste de extensão inválida envia o JSON da coleção, evitando um arquivo executável de amostra. Os caminhos de arquivos são relativos ao [working directory do Postman](https://learning.postman.com/docs/getting-started/installation/settings/working-directory).
+No Postman, importe `docs/postman/crm-engenharia.postman_collection.json` e `docs/postman/local.postman_environment.json`, selecione o ambiente local e configure o working directory para `docs/postman`. São **45 requisições e 120 asserções**, distribuídas em **9 pastas**; execute a coleção completa no Collection Runner na ordem do arquivo, com `Orçamentos` entre `Arquivos` e `Dashboard`. Os tokens e IDs, incluindo `orcamentoId`, começam vazios e são preenchidos pelos testes; um novo projeto por execução mantém as versões do PDF em 1 e 2. O teste de extensão inválida envia o JSON da coleção, evitando um arquivo executável de amostra. Os caminhos de arquivos são relativos ao [working directory do Postman](https://learning.postman.com/docs/getting-started/installation/settings/working-directory).
 
 Com Newman disponível, execute da raiz:
 
