@@ -70,7 +70,7 @@ function resumir() {
 
 async function main() {
   const execucao = `${Date.now()}-${process.pid}`;
-  let joao, maria, cliente, projeto, diario, arquivo1, arquivo2, projetoMaria;
+  let joao, maria, cliente, projeto, diario, orcamento, arquivo1, arquivo2, projetoMaria;
   const tokenJoao = () => { assert.ok(joao?.token, 'Login do João necessário'); return joao.token; };
   const tokenMaria = () => { assert.ok(maria?.token, 'Login da Maria necessário'); return maria.token; };
   const projetoId = () => { assert.ok(projeto?.id, 'Projeto de teste necessário'); return projeto.id; };
@@ -78,6 +78,11 @@ async function main() {
     projetoId: projetoId(), data: new Date().toISOString(),
     descricao: `Atividades do smoke ${execucao}`,
     maoDeObra: [{ funcao: 'Pedreiro', qtd: 2 }], fotos: [],
+  });
+  const corpoOrcamento = () => ({
+    nome: `Orçamento smoke ${execucao}`,
+    descricao: 'Estrutura e alvenaria',
+    valor: 12500.5,
   });
 
   await passo('health: API e banco online', async () => {
@@ -148,6 +153,83 @@ async function main() {
   await passo('listar e encontrar diário', async () => {
     const dados = await requisitar('GET', '/api/diarios', { token: tokenJoao() });
     assert.ok(dados.some(item => item.id === diario.id));
+  });
+
+  await passo('criar orçamento com projeto e cliente', async () => {
+    orcamento = await requisitar('POST', `/api/projetos/${projetoId()}/orcamentos`, {
+      token: tokenJoao(), corpo: corpoOrcamento(), status: 201,
+    });
+    assert.ok(orcamento.id);
+    assert.equal(orcamento.projetoId, projetoId());
+    assert.equal(typeof orcamento.valor, 'number');
+    assert.equal(orcamento.valor, 12500.5);
+    assert.equal(typeof orcamento.dataCriacao, 'string');
+    assert.ok(!Number.isNaN(new Date(orcamento.dataCriacao).getTime()));
+    assert.equal(orcamento.projeto.id, projetoId());
+    assert.equal(orcamento.projeto.cliente.id, cliente.id);
+    assert.equal(typeof orcamento.projeto.cliente.nome, 'string');
+    assert.ok(orcamento.projeto.cliente.nome.trim());
+    assert.equal(typeof orcamento.projeto.cliente.telefone, 'string');
+    assert.ok(orcamento.projeto.cliente.telefone.trim());
+    assert.equal(orcamento.projeto.cliente.nome, cliente.nome);
+    assert.equal(orcamento.projeto.cliente.telefone, cliente.telefone);
+  });
+
+  await passo('listar e encontrar orçamento por projeto', async () => {
+    assert.ok(orcamento?.id, 'Orçamento de teste necessário');
+    const dados = await requisitar('GET', `/api/projetos/${projetoId()}/orcamentos`, { token: tokenJoao() });
+    assert.ok(Array.isArray(dados));
+    assert.ok(dados.some(item => item.id === orcamento.id));
+    assert.ok(dados.every(item => item.projetoId === projetoId()));
+  });
+
+  await passo('listar e encontrar orçamento na lista global', async () => {
+    assert.ok(orcamento?.id, 'Orçamento de teste necessário');
+    const dados = await requisitar('GET', '/api/orcamentos', { token: tokenJoao() });
+    assert.ok(Array.isArray(dados));
+    assert.ok(dados.length <= 200);
+    assert.ok(dados.some(item => item.id === orcamento.id));
+  });
+
+  await passo('orçamento com valor zero: 400', async () => {
+    const dados = await requisitar('POST', `/api/projetos/${projetoId()}/orcamentos`, {
+      token: tokenJoao(), corpo: { ...corpoOrcamento(), valor: 0 }, status: 400,
+    });
+    assert.match(dados.message, /valor/i);
+  });
+
+  await passo('orçamento com valor em string: 400', async () => {
+    const dados = await requisitar('POST', `/api/projetos/${projetoId()}/orcamentos`, {
+      token: tokenJoao(), corpo: { ...corpoOrcamento(), valor: '100' }, status: 400,
+    });
+    assert.match(dados.message, /valor/i);
+  });
+
+  await passo('Maria não lista o orçamento do João', async () => {
+    assert.ok(orcamento?.id, 'Orçamento de teste necessário');
+    const dados = await requisitar('GET', '/api/orcamentos', { token: tokenMaria() });
+    assert.ok(Array.isArray(dados));
+    assert.ok(!dados.some(item => item.id === orcamento.id));
+    assert.ok(!dados.some(item => item.projetoId === projetoId()));
+  });
+
+  await passo('Maria não cria orçamento no projeto do João: 404', async () => {
+    const dados = await requisitar('POST', `/api/projetos/${projetoId()}/orcamentos`, {
+      token: tokenMaria(), corpo: corpoOrcamento(), status: 404,
+    });
+    assert.equal(dados.message, 'Projeto não encontrado.');
+  });
+
+  await passo('sem token: POST /api/projetos/:id/orcamentos -> 401', async () => {
+    await requisitar('POST', `/api/projetos/${projetoId()}/orcamentos`, { corpo: corpoOrcamento(), status: 401 });
+  });
+
+  await passo('sem token: GET /api/projetos/:id/orcamentos -> 401', async () => {
+    await requisitar('GET', `/api/projetos/${projetoId()}/orcamentos`, { status: 401 });
+  });
+
+  await passo('sem token: GET /api/orcamentos -> 401', async () => {
+    await requisitar('GET', '/api/orcamentos', { status: 401 });
   });
 
   await passo('upload PDF versão 1', async () => {

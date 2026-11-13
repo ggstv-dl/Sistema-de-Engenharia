@@ -118,7 +118,16 @@ O dashboard soma `valor` dos orçamentos de projetos do engenheiro com `dataCria
 
 Não há provider simulado no servidor, envio Cloud, normalização de telefone ou busca de orçamento implementados nessa rota. A autenticação ocorre antes da resposta 501. A coleção Postman exclui esse endpoint e os endpoints inexistentes.
 
-## Divergências a corrigir no front
+## Integração atual do front
 
-- O front envia `obraId`/`anotacoes`; deve enviar `projetoId`/`descricao`.
-- O front lê `createdAt`; o back devolve `criadoEm`.
+- Projetos: o formulário seleciona `clienteId` e permite criar o cliente antes de criar o projeto; o cliente fica desabilitado na edição.
+- RDO: o JSON contém `projetoId` e `descricao`. `obraId`/`anotacoes` são apenas aliases de entrada do mapeador, não chaves enviadas. As fotos são enviadas uma por vez antes do sync, que recebe os caminhos `/uploads/`; a listagem usa `GET /api/diarios` e a hora vem de `criadoEm`.
+- Orçamentos: o POST por projeto envia somente `nome`, `descricao` quando preenchida e `valor` numérico. A listagem usa `GET /api/orcamentos`; o front formata `dataCriacao` e lê cliente/telefone da relação com o projeto.
+- Envio ao cliente: o navegador abre `wa.me` com a mensagem pronta, sem chamar a rota 501 de WhatsApp. Há cópia da mensagem e alternativa selecionável quando o clipboard falha. Abrir o link não comprova envio nem altera um status no servidor.
+- SINAPI, itens/BDI, validade, status e impressão do orçamento são recursos do mock, ocultos no caminho real. Não há edição/exclusão de orçamento pela API. Relatórios não aparecem no menu e continuam sem endpoint.
+
+## Cobertura automática do contrato
+
+`npm run smoke` tem **46 passos**, preservando os 36 anteriores e acrescentando 10 de orçamentos: criação com cliente/valor numérico, listagens por projeto e global, valor zero e string, isolamento entre engenheiros e ausência de token nas três rotas. Qualquer falha produz exit code 1; a meta é `46 OK, 0 FALHOU`.
+
+A coleção `docs/postman/crm-engenharia.postman_collection.json` tem **45 requisições e 120 asserções em 9 pastas**. A pasta `Orçamentos`, entre `Arquivos` e `Dashboard`, valida criação, listagens, entradas inválidas e projeto de outro engenheiro; `Segurança` cobre 401 nas três rotas. `orcamentoId` é gravado durante a criação e está vazio no ambiente versionado. A meta da execução completa é zero falhas; esses números descrevem a cobertura, não substituem uma execução contra API/banco disponíveis.

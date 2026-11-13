@@ -44,6 +44,31 @@
       "key": "dataFutura",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "orcamentoNome",
+      "value": "Orçamento TED 03",
+      "type": "string"
+    },
+    {
+      "key": "orcamentoDescricao",
+      "value": "Estrutura e alvenaria",
+      "type": "string"
+    },
+    {
+      "key": "orcamentoValor",
+      "value": "12500.5",
+      "type": "string"
+    },
+    {
+      "key": "orcamentoValorZero",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "orcamentoValorTexto",
+      "value": "100",
+      "type": "string"
     }
   ],
   "item": [
@@ -1045,6 +1070,203 @@
       ]
     },
     {
+      "name": "Orçamentos",
+      "description": "Valida criação e listagem de orçamentos pela API real, valor numérico, dados do cliente, entradas inválidas e isolamento entre engenheiros. Executar depois de Arquivos para reutilizar os IDs e tokens obtidos pelas pastas anteriores.",
+      "item": [
+        {
+          "name": "Criar orçamento",
+          "request": {
+            "method": "POST",
+            "description": "Cria orçamento no projeto do João, com nome, descrição e valor numérico definidos nas variáveis da coleção. Espera 201, projeto e cliente embutidos; grava orcamentoId no ambiente.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}/orcamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{orcamentoNome}}\",\n  \"descricao\": \"{{orcamentoDescricao}}\",\n  \"valor\": {{orcamentoValor}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Formato do orçamento e projeto\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"id\", \"projetoId\", \"nome\", \"descricao\", \"valor\", \"dataCriacao\", \"projeto\"); pm.expect(c.id).to.be.a(\"string\").and.not.empty; pm.expect(c.projetoId).to.eql(pm.environment.get(\"projetoId\")); pm.expect(c.projeto.id).to.eql(c.projetoId); pm.expect(c.dataCriacao).to.be.a(\"string\").and.not.empty; pm.expect(Number.isNaN(new Date(c.dataCriacao).getTime())).to.eql(false); });",
+                  "pm.test(\"Valor devolvido como número\", () => { const c = pm.response.json(); pm.expect(c.valor).to.be.a(\"number\"); pm.expect(c.valor).to.eql(Number(pm.collectionVariables.get(\"orcamentoValor\"))); });",
+                  "pm.test(\"Cliente com id, nome e telefone\", () => { const c = pm.response.json().projeto.cliente; pm.expect(c).to.have.all.keys(\"id\", \"nome\", \"telefone\"); [\"id\", \"nome\", \"telefone\"].forEach(campo => pm.expect(c[campo]).to.be.a(\"string\").and.not.empty); });",
+                  "if (pm.response.code === 201) pm.environment.set(\"orcamentoId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar orçamentos do projeto",
+          "request": {
+            "method": "GET",
+            "description": "Lista orçamentos do projeto do João. Espera 200, inclui o orçamento recém-criado e mantém todos os resultados no projeto selecionado.",
+            "header": [],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}/orcamentos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Resposta em lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+                  "pm.test(\"Orçamento criado aparece\", () => { const id = pm.environment.get(\"orcamentoId\"); pm.expect(id).to.be.a(\"string\").and.not.empty; pm.expect(pm.response.json().some(item => item.id === id)).to.eql(true); });",
+                  "pm.test(\"Somente o projeto selecionado\", () => pm.expect(pm.response.json().every(item => item.projetoId === pm.environment.get(\"projetoId\"))).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar todos os orçamentos do João",
+          "request": {
+            "method": "GET",
+            "description": "Lista até 200 orçamentos dos projetos do engenheiro autenticado. Espera 200 e inclui orcamentoId criado nesta execução.",
+            "header": [],
+            "url": "{{baseUrl}}/api/orcamentos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Resposta em lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+                  "pm.test(\"Orçamento criado aparece no limite de 200\", () => { const id = pm.environment.get(\"orcamentoId\"); pm.expect(id).to.be.a(\"string\").and.not.empty; pm.expect(pm.response.json().length).to.be.at.most(200); pm.expect(pm.response.json().some(item => item.id === id)).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orçamento com valor zero",
+          "request": {
+            "method": "POST",
+            "description": "Envia o valor zero definido na variável orcamentoValorZero. Espera 400 com mensagem identificando valor.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}/orcamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{orcamentoNome}}\",\n  \"descricao\": \"{{orcamentoDescricao}}\",\n  \"valor\": {{orcamentoValorZero}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Mensagem identifica o valor\", () => pm.expect(pm.response.json().message.toLowerCase()).to.include(\"valor\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orçamento com valor em string",
+          "request": {
+            "method": "POST",
+            "description": "Envia orcamentoValorTexto entre aspas para confirmar que a API recusa string numérica. Espera 400 com mensagem identificando valor.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}/orcamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{orcamentoNome}}\",\n  \"descricao\": \"{{orcamentoDescricao}}\",\n  \"valor\": \"{{orcamentoValorTexto}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Mensagem identifica o valor\", () => pm.expect(pm.response.json().message.toLowerCase()).to.include(\"valor\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orçamento em projeto de outro engenheiro",
+          "request": {
+            "method": "POST",
+            "description": "Envia corpo válido ao projeto da Maria com token do João. Espera 404, sem revelar a propriedade do projeto.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projetos/{{projetoOutroId}}/orcamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{orcamentoNome}}\",\n  \"descricao\": \"{{orcamentoDescricao}}\",\n  \"valor\": {{orcamentoValor}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Projeto inacessível não é revelado\", () => pm.expect(pm.response.json().message).to.eql(\"Projeto não encontrado.\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "7. Dashboard",
       "item": [
         {
@@ -1219,6 +1441,95 @@
             "description": "Desativa explicitamente a autenticação herdada com No Auth. Espera 401 com message; o corpo, quando presente, contém os campos válidos do RDO.",
             "header": [],
             "url": "{{baseUrl}}/api/dashboard",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Autenticação exigida\", () => pm.expect(pm.response.json().message).to.eql(\"Autenticação necessária.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar orçamento sem token",
+          "request": {
+            "method": "POST",
+            "description": "Desativa a autenticação herdada. Espera 401 com message nas rotas de orçamento.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}/orcamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{orcamentoNome}}\",\n  \"descricao\": \"{{orcamentoDescricao}}\",\n  \"valor\": {{orcamentoValor}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Autenticação exigida\", () => pm.expect(pm.response.json().message).to.eql(\"Autenticação necessária.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orçamentos do projeto sem token",
+          "request": {
+            "method": "GET",
+            "description": "Desativa a autenticação herdada. Espera 401 com message nas rotas de orçamento.",
+            "header": [],
+            "url": "{{baseUrl}}/api/projetos/{{projetoId}}/orcamentos",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Erro no formato { message }\", () => { const c = pm.response.json(); pm.expect(c).to.have.all.keys(\"message\"); pm.expect(c.message).to.be.a(\"string\").and.not.empty; });",
+                  "pm.test(\"Autenticação exigida\", () => pm.expect(pm.response.json().message).to.eql(\"Autenticação necessária.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orçamentos globais sem token",
+          "request": {
+            "method": "GET",
+            "description": "Desativa a autenticação herdada. Espera 401 com message nas rotas de orçamento.",
+            "header": [],
+            "url": "{{baseUrl}}/api/orcamentos",
             "auth": {
               "type": "noauth"
             }
