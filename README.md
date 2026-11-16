@@ -187,3 +187,8 @@ Os testes não incluem a rota 501 de WhatsApp nem rotas inexistentes. Não expor
 
 Siga o [roteiro de capturas](docs/ted03-prints.md) para preparar os dados e registrar as Figuras 10 a 14.
 Atalhos: `npm run prints:preparar`, `npm run prints:check` e `npm run postman:run`.
+
+## Validação com o parceiro
+
+Kit anônimo para a sessão de 18/11/2026: [auditoria, roteiro, questionário e convites](docs/validacao/auditoria.md).
+Resumo local: `npm run validacao:resumo -- <respostas.csv> [observacoes.csv]`; instruções e exemplos fictícios em [docs/validacao/resultados.md](docs/validacao/resultados.md).

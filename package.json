@@ -14,7 +14,8 @@
     "smoke": "node scripts/smoke.js",
     "prints:preparar": "node scripts/prints-preparar.js",
     "prints:check": "node scripts/prints-check.js",
-    "postman:run": "npx --yes newman run docs/postman/crm-engenharia.postman_collection.json -e docs/postman/local.postman_environment.json --working-dir docs/postman"
+    "postman:run": "npx --yes newman run docs/postman/crm-engenharia.postman_collection.json -e docs/postman/local.postman_environment.json --working-dir docs/postman",
+    "validacao:resumo": "node scripts/validacao-resumo.js"
   },
   "keywords": [],
   "author": "",

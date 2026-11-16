@@ -1,0 +1,16 @@
+tarefa;concluiu;tempo_min
+T1;sim;2
+T1;sim;2
+T1;com ajuda;3
+T2;sim;2
+T2;sim;3
+T2;sim;2,5
+T3;sim;3
+T3;com ajuda;4
+T3;não;4
+T4;sim;3
+T4;sim;3,5
+T4;não;
+T5;sim;2
+T5;com ajuda;4
+T5;sim;3
