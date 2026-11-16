@@ -7,6 +7,8 @@ Sessão prevista: quarta-feira, 18/11/2026, até 30 minutos, com participação 
 - [Convites](convite.md)
 - [Consentimento oral](consentimento.md)
 - [Alternativa remota](plano-b-remoto.md)
+- [Retrospectiva da demo — modelo em branco](retrospectiva-demo.md)
+- [Resumo de resultados e exemplos fictícios](resultados.md)
 
 ## Parte A — auditoria somente por leitura
 
@@ -77,3 +79,30 @@ Sintaxe e build foram executados localmente porque independem de banco e rede; n
 Cinco tarefas: localizar projeto, editar projeto, registrar diário com fotos, criar orçamento e preparar mensagem. Login será feito previamente pela equipe com conta de demonstração. Cadastros de conta/cliente e criação de projeto ficam fora apenas pelo limite de tempo e para não solicitar dados pessoais. Abertura no WhatsApp pode expor a conta de quem abrir: na sessão, essa etapa usa exclusivamente o equipamento e a conta de demonstração da equipe; nunca a conta do participante e nunca envio a contato real. Se isso não estiver preparado, interromper a etapa e registrar a limitação, sem atribuir conclusão ao participante.
 
 O roteiro é avaliado pelo código, não por resultados da apresentação de 15/11, que são desconhecidos. Não se deve tratar avaliação por vídeo como teste prático. O plano remoto identifica essa diferença.
+
+## Critérios de aceite do kit
+
+Conferência programática dos documentos: `3 + 3 + 4 + 4 + 4 + 4 + 5 + 3 = 30 minutos`. São cinco tarefas com limite individual de até quatro minutos. O questionário contém exatamente 3 perguntas de perfil, 8 afirmações de escala, 1 recomendação de 0–10 e 4 abertas. Consentimento com 6 linhas; alternativa remota com 10 linhas. Os quatro blocos de resultados da retrospectiva permanecem sem fatos preenchidos; apenas 12 limitações com fontes foram incluídas.
+
+| Tarefa | Linha PRONTO na auditoria | Tela | Evidência |
+|---|---|---|---|
+| T1 | Listar projetos | Projetos | `front-login/src/pages/Projetos.jsx:441` |
+| T2 | Editar projeto | Projetos → Editar | `front-login/src/pages/Projetos.jsx:684` |
+| T3 | Registrar diário de obra (RDO) | Diário de Obra → Novo Registro | `front-login/src/pages/Diario.jsx:455` |
+| T3 | Anexar fotos ao RDO | Adicionar fotos | `front-login/src/pages/Diario.jsx:636` |
+| T3 | Listar diários | Ver detalhes | `front-login/src/pages/Diario.jsx:121` |
+| T4 | Criar orçamento | Novo Orçamento | `front-login/src/pages/Orcamentos.jsx:760` |
+| T5 | Enviar orçamento ao cliente (link do WhatsApp) | Enviar ao cliente / Copiar mensagem | `front-login/src/pages/Orcamentos.jsx:719`, `:729` |
+
+O vínculo de cada tarefa com uma linha PRONTO e a existência das linhas de código foram conferidos por programa. Revisão de privacidade: buscas textuais sem ocorrências de pedidos de identificação nem credenciais literais nos arquivos novos; menções a coleta de contato no questionário são instruções para desativá-la. Campos de título se referem a exemplos fictícios. Nenhum dado de configuração local foi copiado.
+
+Parte D executada após a auditoria e a aprovação das conferências de B/C; a indisponibilidade do servidor permaneceu registrada como NÃO VERIFICADO, sem contorno. Resultados:
+
+- `node --check scripts/validacao-resumo.js`: código de saída 0.
+- `npm run check` após adicionar o script: `Sintaxe OK em 45 arquivos.`
+- Comando com os dois CSVs fictícios: 3 respondentes; médias 4,00 / 3,00 / 4,67 / 4,00 / 4,67 / 4,00 / 3,50 / 4,67; recomendação 8,50 e 50,00% de notas 9–10, com duas respostas válidas.
+- Observações fictícias: conclusão independente T1 66,67%, T2 100,00%, T3 33,33%, T4 66,67%, T5 66,67%; tempos médios 2,33 / 2,50 / 3,67 / 3,25 / 3,00 minutos.
+- 23 cenários de leitura, cálculo e erros aprovados, executados por verificação temporária: vírgula/ponto e vírgula, BOM/CRLF, aspas duplicadas, célula com quebra de linha, escala pela ordem, colunas reordenadas, ausência de horário, somente cabeçalho, linha vazia, notas inválidas, numeração parcial/repetida, formato incorreto, arquivo ausente, argumentos ausentes, campos de observação inválidos. Erros retornam código 1 sem imprimir um resumo parcial. Os arquivos temporários foram removidos automaticamente.
+- O script usa apenas Node nativo e não grava arquivos. O campo de comandos do `package.json` ganhou somente `validacao:resumo`; dependências e demais configurações foram preservadas. A seção nova do README tem cinco linhas, incluindo título e linhas vazias.
+
+O único documento adicional aos cinco modelos da Parte B é esta auditoria, criada dentro da pasta autorizada para guardar a tabela e as verificações; a Parte D inclui também `resultados.md` com as instruções do comando. Não houve ampliação dos caminhos autorizados nem mudança das funcionalidades do sistema.
