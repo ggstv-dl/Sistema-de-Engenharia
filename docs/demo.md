@@ -1,44 +1,44 @@
-# Demonstração de 15/11/2026
+# Preparação da demonstração de 15/11/2026
 
-Congelamento auditado em 13/11/2026, a partir de `feat/orcamentos-front` no commit `65317f0`, na branch `chore/congelamento`. O roteiro usa a API real e cabe em 7 minutos, ou 8 com o bloco opcional de testes.
+Em 13/11/2026, o grupo analisou a versão disponível em `feat/orcamentos-front`, no commit `65317f0`, e organizou o congelamento na branch `chore/congelamento`. Em seguida, elaborou um roteiro de apresentação com a API real, previsto para 7 minutos ou 8 minutos com o bloco opcional de testes. Este documento registra a preparação; não descreve resultados da apresentação de 15/11.
 
-PRONTO significa implementado no código. O ensaio integrado e a apresentação no navegador precisam ser feitos no computador da demo. Credenciais: consulte a seção [Usuários do seed](../README.md#usuários-do-seed); este roteiro não reproduz senhas.
+O grupo adotou PRONTO para identificar funcionalidades implementadas no código. O ensaio integrado e a apresentação no navegador permaneceram sujeitos à verificação no computador da demonstração. As contas de teste estão documentadas em [Usuários do seed](../README.md#usuários-do-seed); este roteiro não reproduz senhas.
 
-## Checklist antes da demo — seguir nesta ordem
+## Procedimento de preparação definido pelo grupo
 
-Pré-condições: dependências já instaladas, Docker disponível, imagem da API construída com o código desta branch, Newman disponível para o comando existente e as duas contas do README presentes no banco atual. Separe duas fotos JPG/JPEG/PNG válidas, com menos de 10 MB cada. Grave e confira um vídeo de backup do fluxo real para usar como último recurso; não foi encontrado vídeo em `docs/` na auditoria.
+O grupo definiu como pré-condições as dependências instaladas, o Docker disponível, a imagem da API construída com o código da branch, o Newman disponível e as duas contas do README presentes no banco. Também previu duas fotos JPG/JPEG/PNG válidas, com menos de 10 MB cada, e a gravação e conferência de um vídeo do fluxo real para contingência. A auditoria não encontrou vídeo em `docs/`; sua produção permaneceu pendente de confirmação. As etapas abaixo descrevem o procedimento planejado, sem comprovar sua execução.
 
-1. **Subir e conferir os serviços.** Na raiz do repositório:
+1. **Inicialização dos serviços.** Primeiro, o grupo deverá executar os comandos na raiz do repositório:
 
    ```bash
    docker compose up -d
    docker compose ps
    ```
 
-   Aguarde o banco e a API ficarem saudáveis. O serviço `api` do Compose executa `prisma migrate deploy` na inicialização, conforme a configuração existente. Se a imagem estiver desatualizada, resolva isso antes do ensaio; não apresente uma imagem de outra versão.
+   O grupo deverá aguardar a confirmação de disponibilidade do banco e da API. O serviço `api` do Compose executa `prisma migrate deploy` na inicialização, conforme a configuração existente. Uma imagem desatualizada deverá ser corrigida antes do ensaio, para que a apresentação utilize a versão prevista.
 
-2. **Conferir o `.env` e a conexão antes de continuar.** No host, `DATABASE_URL` deve apontar para `127.0.0.1` e a porta publicada por `POSTGRES_PORT`; neste ambiente a porta é `55434`. `POSTGRES_USER`, `POSTGRES_PASSWORD` e `POSTGRES_DB` devem corresponder ao usuário, à senha e ao banco de `DATABASE_URL`. O container da API usa o hostname `db`, como já definido no Compose.
+2. **Conferência da configuração e da conexão.** Em seguida, o grupo deverá conferir o `.env`. No host, `DATABASE_URL` deve apontar para `127.0.0.1` e a porta publicada por `POSTGRES_PORT`; no ambiente auditado, a porta era `55434`. `POSTGRES_USER`, `POSTGRES_PASSWORD` e `POSTGRES_DB` devem corresponder ao usuário, à senha e ao banco de `DATABASE_URL`. O container da API usa o hostname `db`, como já definido no Compose.
 
-   Na auditoria, a porta coincide, mas a senha e o nome do banco de `DATABASE_URL` divergem dos valores do Compose. Alinhe manualmente as variáveis ao banco atual antes dos testes e do reset. Mudar variáveis não redefine as credenciais de um volume existente; uma recriação limpa com valores divergentes deixaria a API sem conexão. Preserve as configurações locais, sem copiar segredos para Git ou para o projetor.
+   Durante a auditoria, o grupo identificou que a porta coincidia, mas a senha e o nome do banco de `DATABASE_URL` divergiam dos valores do Compose. Registrou, portanto, a necessidade de alinhar manualmente as variáveis ao banco antes dos testes e de qualquer reset. A alteração de variáveis não redefine as credenciais de um volume existente; uma recriação com valores divergentes impediria a conexão da API. As configurações locais deverão ser preservadas, sem exposição de segredos no Git ou na projeção.
 
-3. **Conferir as migrations pelo comando existente.** Com o banco saudável e o ambiente coerente:
+3. **Conferência das migrations.** Com o banco disponível e a configuração coerente, o grupo deverá utilizar o comando existente:
 
    ```bash
    npm run db:migrate
    ```
 
-   Interrompa a preparação se houver erro ou se aparecer uma alteração inesperada de schema; congelamento não prevê migrations novas.
+   O grupo deverá interromper a preparação em caso de erro ou de alteração inesperada de schema, pois o congelamento não prevê migrations novas.
 
-4. **Executar os testes ANTES do reset**, com a API do Compose saudável, as duas contas já existentes e o Newman disponível:
+4. **Execução dos testes antes de qualquer reset.** Na sequência, com a API do Compose disponível, as duas contas existentes e o Newman disponível, o grupo deverá executar:
 
    ```bash
    npm run smoke
    npm run postman:run
    ```
 
-   Metas: `46 OK, 0 FALHOU` no smoke; 45 requisições, 120 asserções e zero falhas no Newman. O script `postman:run` já existe e configura o working directory dos uploads. Execute a coleção inteira para preencher IDs e autenticação; salve somente o resumo real da execução, sem exportar o ambiente preenchido. Qualquer falha deve ser investigada antes do reset, sem alterar código de negócio para aprovar testes.
+   O grupo definiu como metas `46 OK, 0 FALHOU` no smoke e 45 requisições, 120 asserções e zero falhas no Newman. O script `postman:run` já existe e configura o working directory dos uploads. A execução deverá abranger a coleção inteira para preencher IDs e autenticação. O grupo deverá guardar somente o resumo observado, sem exportar o ambiente preenchido, e investigar falhas antes de qualquer reset, sem alterar regras de negócio apenas para aprovar os testes.
 
-5. **Somente depois dos testes aprovados, fazer o reset limpo. ATENÇÃO: APAGA TODOS OS DADOS DO BANCO E OS VOLUMES DO COMPOSE.** Os dados de teste são descartados para a demo começar com o seed:
+5. **Reset previsto somente após a aprovação dos testes. ATENÇÃO: APAGA TODOS OS DADOS DO BANCO E OS VOLUMES DO COMPOSE.** O grupo incluiu a possibilidade de descartar os dados de teste para iniciar a demonstração com o seed, conforme os comandos abaixo. Sua inclusão no procedimento não indica que tenham sido executados:
 
    ```bash
    docker compose down -v
@@ -48,29 +48,29 @@ Pré-condições: dependências já instaladas, Docker disponível, imagem da AP
    npm run db:seed
    ```
 
-   Aguarde os serviços ficarem saudáveis antes de migrate/seed. A pasta `uploads/` do host não é removida por `down -v`; os arquivos dentro do container não têm volume persistente no Compose atual. Fotos e documentos referenciados pelo seed não são arquivos físicos: use as duas fotos separadas para criar um RDO novo na apresentação. Não rode os testes novamente após o reset, salvo se aceitar que novos dados de teste aparecerão.
+   O grupo deverá aguardar a disponibilidade dos serviços antes de executar migrate/seed. A pasta `uploads/` do host não é removida por `down -v`; os arquivos dentro do container não têm volume persistente no Compose atual. Como as referências do seed não criam fotos ou documentos físicos, o roteiro prevê um RDO novo com as duas fotos separadas pela equipe. Uma nova execução dos testes após o reset criará dados adicionais e deverá ser considerada na preparação das telas.
 
-6. **Iniciar API e front para a apresentação.** Como o Compose também sobe a API, pare apenas esse serviço antes de usar a mesma porta no host; mantenha o banco ligado:
+6. **Inicialização da API e do front no host.** Como o Compose também inicia a API, o grupo deverá encerrar apenas esse serviço antes de utilizar a mesma porta no host, mantendo o banco ligado:
 
    ```bash
    docker compose stop api
    npm run dev
    ```
 
-   Em outro terminal, a partir da raiz:
+   Em seguida, o grupo deverá iniciar o front em outro terminal, a partir da raiz:
 
    ```bash
    cd front-login
    npm run dev
    ```
 
-   Confira `VITE_USE_MOCK=false` e `VITE_API_URL=http://localhost:3000` no ambiente do front. `.env.local` tem precedência sobre `.env`; reinicie o Vite se mudar esses valores. A configuração atual de `.env.local` coincide com esses valores.
+   O grupo deverá conferir `VITE_USE_MOCK=false` e `VITE_API_URL=http://localhost:3000` no ambiente do front. Como `.env.local` tem precedência sobre `.env`, alterações exigem a reinicialização do Vite. Na auditoria de 13/11, a configuração local correspondia a esses valores.
 
-7. **Abrir `http://localhost:5173` na tela de login.** Se uma sessão anterior abrir o dashboard, use **Sair** antes da apresentação. Entre somente quando começar o cronômetro, usando os dados do README. Mantenha os terminais da API e do Vite disponíveis e o resumo dos testes anteriores separado.
+7. **Preparação da tela inicial.** Por fim, o grupo deverá abrir `http://localhost:5173` na tela de login. Caso uma sessão anterior abra o dashboard, deverá utilizar **Sair** antes da apresentação. O roteiro prevê o login com a conta do README após o início do cronômetro, com os terminais da API e do Vite disponíveis e o resumo dos testes anteriores separado.
 
 ## Roteiro de 7 minutos
 
-| Tempo | O que clicar | O que falar em uma frase | Situação no código |
+| Tempo | Ação prevista para o grupo | Explicação prevista | Situação no código |
 |---|---|---|---|
 | 0:00–0:40 | Tela de login: entrar com a conta do João indicada no README. | “O engenheiro se autentica e a API limita os projetos e registros ao seu usuário.” | PRONTO |
 | 0:40–1:25 | Dashboard: mostrar obras ativas, diários e custo do mês. | “Estes indicadores vêm do banco; o custo soma os orçamentos criados neste mês.” | PRONTO para esses indicadores |
@@ -80,45 +80,45 @@ Pré-condições: dependências já instaladas, Docker disponível, imagem da AP
 | 5:35–7:00 | Abrir o orçamento → Enviar ao cliente → conferir o contato e a mensagem no WhatsApp do engenheiro; voltar e mostrar Copiar mensagem. | “O navegador abre o WhatsApp com a mensagem pronta, e a confirmação do envio fica com o engenheiro.” | PRONTO |
 | Opcional, 7:00–8:00 | Mostrar o resumo real dos testes anteriores ou a coleção Postman, destacando um 404 entre engenheiros e um 401 sem autenticação. | “Os testes verificam que um usuário não acessa dados de outro e que as rotas protegidas exigem autenticação.” | Testes implementados; execução atual NÃO VERIFICADA |
 
-Não apresente o campo de eficiência, o progresso das obras ou o número de diários como métricas de aprovação: o backend retorna eficiência nula, progresso vazio e total de diários, sem modelar pendências. O link pode abrir WhatsApp Web ou o aplicativo configurado no navegador; abrir a janela não significa que a mensagem foi entregue.
+O grupo delimitou a apresentação aos indicadores disponíveis: o backend retorna eficiência nula, progresso vazio e total de diários, sem modelar aprovação ou pendências. O link pode abrir WhatsApp Web ou o aplicativo configurado no navegador, mas a abertura da janela não comprova a entrega da mensagem.
 
 ## Plano B
 
 ### API não sobe
 
-1. Confira o erro no terminal de `npm run dev` e o estado dos serviços com `docker compose ps`.
-2. Se a porta estiver ocupada pelo container, use `docker compose stop api` e inicie novamente `npm run dev` na raiz.
-3. Se não houver recuperação durante a demo, use o vídeo de backup gravado e conferido antes da apresentação.
+1. O grupo deverá consultar o erro no terminal de `npm run dev` e o estado dos serviços com `docker compose ps`.
+2. Se a porta estiver ocupada pelo container, deverá utilizar `docker compose stop api` e iniciar novamente `npm run dev` na raiz.
+3. Se não houver recuperação durante a apresentação, deverá recorrer ao vídeo de contingência, desde que tenha sido gravado e conferido previamente.
 
 ### Banco não responde
 
-1. Confira `docker compose ps`, `docker compose logs --tail=50 db` e a correspondência do `.env` com a porta e o volume atual.
-2. Execute `docker compose restart db`, aguarde o banco saudável e tente novamente sem apagar dados.
-3. Reset, somente na preparação e após testes aprovados: siga `docker compose down -v`, `docker compose up -d`, `npm run db:migrate` e `npm run db:seed` do checklist, aceitando a perda de dados; durante a apresentação, prefira o vídeo se não houver recuperação.
+1. O grupo deverá consultar `docker compose ps`, `docker compose logs --tail=50 db` e a correspondência do `.env` com a porta e o volume em uso.
+2. Em seguida, deverá executar `docker compose restart db`, aguardar a disponibilidade do banco e tentar novamente sem apagar dados.
+3. O reset ficará restrito à preparação, após testes aprovados e com aceitação da perda dos dados, conforme `docker compose down -v`, `docker compose up -d`, `npm run db:migrate` e `npm run db:seed` do procedimento. Durante a apresentação, o grupo deverá recorrer ao vídeo disponível se não houver recuperação.
 
 ### Foto não carrega
 
-1. Abra um RDO criado na apresentação; as referências de fotos do seed não têm arquivos físicos.
-2. Se a imagem continuar indisponível, registre um RDO sem fotos e mostre descrição, projeto, autor e horário; a tela exibe “Imagem indisponível” quando necessário.
-3. Use o trecho de RDO com fotos do vídeo de backup se precisar demonstrar o fluxo completo.
+1. O grupo deverá abrir um RDO criado na apresentação, pois as referências de fotos do seed não têm arquivos físicos.
+2. Se a imagem continuar indisponível, deverá registrar um RDO sem fotos e apresentar descrição, projeto, autor e horário, identificando a limitação; a tela exibe “Imagem indisponível” quando necessário.
+3. Caso exista vídeo de contingência previamente conferido, o grupo poderá utilizar o trecho do RDO com fotos para explicar o fluxo completo.
 
 ### WhatsApp não abre
 
-1. Confira a conexão e o bloqueador de pop-ups; use o WhatsApp do engenheiro, sem chamar a API oficial.
-2. Clique em **Copiar mensagem**; se o clipboard falhar, selecione e copie o texto na caixa exibida.
-3. Mostre a mensagem pronta e explique que a entrega depende do WhatsApp e da confirmação do usuário.
+1. O grupo deverá conferir a conexão e o bloqueador de pop-ups, utilizando o link para o WhatsApp do engenheiro, sem chamar a API oficial.
+2. Em seguida, deverá utilizar **Copiar mensagem**; se a cópia automática falhar, poderá selecionar e copiar o texto na caixa exibida.
+3. O grupo deverá apresentar a mensagem pronta e esclarecer que a entrega depende do WhatsApp e da confirmação do usuário.
 
 ### Internet cai
 
-1. Continue os passos locais enquanto API, banco e Vite no notebook permanecerem acessíveis; não há fila offline de sincronização.
-2. Use **Copiar mensagem** para o orçamento e adie a abertura do WhatsApp externo até a conexão voltar.
-3. Se o ambiente local também ficar indisponível, use o vídeo de backup como último recurso.
+1. O grupo poderá continuar os passos locais enquanto API, banco e Vite no notebook permanecerem acessíveis, sem atribuir ao sistema uma fila de sincronização offline inexistente.
+2. Para o orçamento, deverá utilizar **Copiar mensagem** e adiar a abertura do WhatsApp externo até o retorno da conexão.
+3. Se o ambiente local também ficar indisponível, poderá recorrer ao vídeo de contingência, desde que tenha sido preparado e conferido.
 
 ### Tela em branco
 
-1. Confira Console/Network do navegador e os terminais da API e do Vite para identificar a falha.
-2. Verifique `VITE_USE_MOCK=false`, a URL da API em `.env.local` e reinicie `npm run dev` dentro de `front-login/`.
-3. Recarregue e comece pela tela de login; se não recuperar, use o vídeo de backup.
+1. O grupo deverá consultar Console/Network do navegador e os terminais da API e do Vite para identificar a falha.
+2. Em seguida, deverá verificar `VITE_USE_MOCK=false`, a URL da API em `.env.local` e reiniciar `npm run dev` dentro de `front-login/`.
+3. Após a tentativa de recuperação, deverá recarregar a página e retornar à tela de login; se a falha persistir, poderá utilizar o vídeo de contingência disponível.
 
 ## Limitações e respostas ao professor
 
@@ -136,7 +136,7 @@ Não apresente o campo de eficiência, o progresso das obras ou o número de di�
 | Orçamento | “A API cria e lista nome, descrição e valor, sem edição, exclusão, itens, BDI, validade ou status de envio.” |
 | Fotos após cancelar | “Uploads já concluídos permanecem no repositório mesmo quando o formulário é abandonado, pois não existe remoção nesse fluxo.” |
 
-Ficam fora do roteiro: relatórios reais, operação offline, SINAPI real, geração automática de PDF, API oficial de WhatsApp, Kanban, edição/exclusão de orçamento e métricas de eficiência/progresso. Recursos mock não serão apresentados como integração real.
+O grupo deixou fora do roteiro relatórios reais, operação offline, SINAPI real, geração automática de PDF, API oficial de WhatsApp, Kanban, edição/exclusão de orçamento e métricas de eficiência/progresso. Também estabeleceu que os recursos simulados não seriam apresentados como integrações reais.
 
 ## Auditoria do congelamento
 
@@ -145,7 +145,7 @@ Ficam fora do roteiro: relatórios reais, operação offline, SINAPI real, gera�
 - Branch de origem: `feat/orcamentos-front`; HEAD inicial `65317f0`.
 - Alterações locais anteriores preservadas: `.dockerignore` e `docs/2026-10-26.md`.
 - `git branch --no-merged main` mostrou 11 branches locais: `chore/ambiente`, `docs/ted03`, `docs/ted03-prints`, `feat/clientes-front`, `feat/clientes-projetos-api`, `feat/contrato-auth`, `feat/orcamentos-api`, `feat/orcamentos-front`, `feat/rdo-api`, `feat/rdo-front` e `feat/upload-versionado`.
-- A comparação usa a `main` local; não houve fetch, merge ou confirmação do estado atual do GitHub nesta auditoria. Os últimos 15 commits foram inspecionados antes das alterações.
+- O grupo comparou as branches com a `main` local, sem realizar fetch, merge ou confirmar o estado do GitHub nessa auditoria. Antes das alterações, inspecionou os últimos 15 commits.
 
 ### Rotas reais
 
@@ -173,7 +173,7 @@ Os prefixos são montados em `src/routes/index.js:15`. “Token” abaixo signif
 | `POST /api/whatsapp/enviar-orcamento` — token, stub 501 | PARCIAL | `src/routes/whatsapp.js:6`, `src/routes/whatsapp.js:8`, `src/controllers/whatsappController.js:1` |
 | Rotas de SINAPI, relatórios e geração automática de PDF | NÃO INICIADO | catálogo completo em `src/routes/index.js:15` |
 
-### Front e correções verificadas antes de editar
+### Funcionalidades e correções conferidas pelo grupo
 
 | Item | Status | Evidência (arquivo:linha) |
 |---|---|---|
@@ -182,15 +182,15 @@ Os prefixos são montados em `src/routes/index.js:15`. “Token” abaixo signif
 | RDO: uploads antes do sync e listagem `/api/diarios` | FEITO | `front-login/src/services/diarioService.js:11`, `front-login/src/services/diarioService.js:214`, `front-login/src/services/diarioService.js:226` |
 | Orçamentos: funções puras, criação por projeto e listagem global | FEITO | `front-login/src/services/orcamentoMapeamento.js:20`, `front-login/src/services/orcamentosService.js:153`, `front-login/src/services/orcamentosService.js:210` |
 | WhatsApp por link; nenhum arquivo do front chama `/api/whatsapp` | FEITO | `front-login/src/services/orcamentoMapeamento.js:72`, `front-login/src/pages/Orcamentos.jsx:726`; busca completa em `front-login/src` |
-| `requestBlob` trata 401 com callback comum quando há autenticação | FEITO — JÁ FEITO | `front-login/src/services/api.js:19`, `front-login/src/services/api.js:78` |
-| Cadastro exige pelo menos 8 caracteres; login preservado | FEITO — JÁ FEITO | `front-login/src/pages/Login.jsx:16` |
-| Exemplo do front com `VITE_USE_MOCK=false` e comentário | FEITO — JÁ FEITO | `front-login/.env.example:5` |
-| Relatórios fora do menu, com página/rota preservadas | FEITO — JÁ FEITO | `front-login/src/components/Layout.jsx:13`, `front-login/src/App.jsx:32` |
-| Consulta de projetos descartada removida do dashboard | FEITO — JÁ FEITO | `src/services/dashboardService.js:13` |
-| README do front usa `/api/auth/login` | FEITO — JÁ FEITO | `front-login/README.md:17` |
-| Seed sem literais de 2024, com datas relativas e `dataCriacao` no mês | FEITO — JÁ FEITO | `prisma/seed.js:24`, `prisma/seed.js:74`, `prisma/seed.js:84`, `prisma/seed.js:146`, `prisma/seed.js:168` |
+| `requestBlob` trata 401 com callback comum quando há autenticação | IMPLEMENTADO E CONFERIDO | `front-login/src/services/api.js:19`, `front-login/src/services/api.js:78` |
+| Cadastro exige pelo menos 8 caracteres; login preservado | IMPLEMENTADO E CONFERIDO | `front-login/src/pages/Login.jsx:16` |
+| Exemplo do front com `VITE_USE_MOCK=false` e comentário | IMPLEMENTADO E CONFERIDO | `front-login/.env.example:5` |
+| Relatórios fora do menu, com página/rota preservadas | IMPLEMENTADO E CONFERIDO | `front-login/src/components/Layout.jsx:13`, `front-login/src/App.jsx:32` |
+| Consulta de projetos descartada removida do dashboard | IMPLEMENTADO E CONFERIDO | `src/services/dashboardService.js:13` |
+| README do front usa `/api/auth/login` | IMPLEMENTADO E CONFERIDO | `front-login/README.md:17` |
+| Seed sem literais de 2024, com datas relativas e `dataCriacao` no mês | IMPLEMENTADO E CONFERIDO | `prisma/seed.js:24`, `prisma/seed.js:74`, `prisma/seed.js:84`, `prisma/seed.js:146`, `prisma/seed.js:168` |
 
-Nenhuma correção da Parte B ficou pendente; não houve commit de correção ou de seed. Nenhuma funcionalidade ausente foi implementada. A única ampliação do escopo literal da lista inicial foi a adição de `orcamentoId` vazio em `docs/postman/local.postman_environment.json`, expressamente pedida na Parte C.2.
+O grupo constatou que as correções avaliadas já estavam implementadas, sem necessidade de novos commits de correção ou de seed. Em seguida, ampliou a cobertura dos testes e documentou a preparação, sem acrescentar funcionalidades ausentes. Também incluiu `orcamentoId` vazio em `docs/postman/local.postman_environment.json` para permitir a execução encadeada dos testes de orçamento; os valores anteriores do ambiente foram preservados.
 
 ### Testes e verificações em 13/11/2026
 
@@ -205,4 +205,4 @@ Nenhuma correção da Parte B ficou pendente; não houve commit de correção ou
 | Newman integrado | NÃO VERIFICADO: API inacessível e Newman não instalado no ambiente de execução |
 | Ensaio completo no navegador e entrega pelo WhatsApp | NÃO VERIFICADO nesta auditoria |
 
-São 36 passos antigos mais 10 de orçamentos no smoke. A coleção tem 36 requisições antigas mais 6 de orçamentos e 3 sem autenticação; são 91 asserções anteriores mais 29 novas. A numeração das pastas antigas foi preservada, e a pasta nova se chama `Orçamentos`.
+Ao final da preparação, o grupo manteve os 36 passos existentes do smoke e acrescentou 10 verificações de orçamento. Na coleção, preservou as 36 requisições anteriores e incluiu 6 de orçamento e 3 sem autenticação, passando de 91 para 120 asserções. A numeração das pastas anteriores foi preservada, e a nova pasta recebeu o nome `Orçamentos`.

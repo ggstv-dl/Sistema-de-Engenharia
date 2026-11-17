@@ -15,7 +15,10 @@
     "prints:preparar": "node scripts/prints-preparar.js",
     "prints:check": "node scripts/prints-check.js",
     "postman:run": "npx --yes newman run docs/postman/crm-engenharia.postman_collection.json -e docs/postman/local.postman_environment.json --working-dir docs/postman",
-    "validacao:resumo": "node scripts/validacao-resumo.js"
+    "validacao:resumo": "node scripts/validacao-resumo.js",
+    "validacao:preparar": "node scripts/validacao-preparar.js",
+    "validacao:fotos": "node scripts/validacao-fotos.js",
+    "validacao:check": "node scripts/validacao-check.js"
   },
   "keywords": [],
   "author": "",

@@ -1,6 +1,6 @@
 # Kit de validação — preparação em 16/11/2026
 
-Sessão prevista: quarta-feira, 18/11/2026, até 30 minutos, com participação anônima de engenheiro(a). Este arquivo é de uso da equipe. Os textos para o participante estão nos documentos vinculados abaixo.
+Em 16/11/2026, o grupo reuniu a documentação do projeto e analisou as funcionalidades disponíveis. Em seguida, preparou os materiais para uma sessão de até 30 minutos, prevista para quarta-feira, 18/11/2026, com participação anônima de engenheiro(a). Este documento apresenta o levantamento e as decisões do grupo; os textos destinados ao participante estão vinculados abaixo.
 
 - [Roteiro da sessão e ficha de observação](roteiro-sessao.md)
 - [Questionário e configuração do formulário](questionario.md)
@@ -10,9 +10,9 @@ Sessão prevista: quarta-feira, 18/11/2026, até 30 minutos, com participação 
 - [Retrospectiva da demo — modelo em branco](retrospectiva-demo.md)
 - [Resumo de resultados e exemplos fictícios](resultados.md)
 
-## Parte A — auditoria somente por leitura
+## Levantamento técnico realizado pelo grupo
 
-Fonte única de seleção das tarefas: a tabela abaixo. PRONTO significa fluxo implementado no código real, sem prometer execução integrada nesta data. PARCIAL e AUSENTE não entram nas tarefas. Caminhos relativos à raiz do repositório; referências conferidas em 16/11/2026.
+Primeiro, o grupo examinou o código sem modificar a implementação e consolidou o levantamento na tabela abaixo. Depois, utilizou somente as linhas PRONTO para selecionar as tarefas da sessão. Essa classificação indica um fluxo implementado, sem comprovar sua execução integrada naquela data. O grupo excluiu das tarefas os itens PARCIAL e AUSENTE. Os caminhos são relativos à raiz do repositório e foram conferidos em 16/11/2026.
 
 | Funcionalidade | Status (PRONTO / PARCIAL / AUSENTE) | Onde (tela e arquivo:linha) | Funciona com a API real? |
 |---|---|---|---|
@@ -31,22 +31,22 @@ Fonte única de seleção das tarefas: a tabela abaixo. PRONTO significa fluxo i
 | Enviar e versionar arquivos pela tela | PARCIAL | Adicionar fotos em `front-login/src/pages/Diario.jsx:636`; menus em `front-login/src/components/Layout.jsx:13` | Envio de fotos pela tela; versionamento implementado no servidor, sem tela para documentos gerais e consulta de versões. Execução NÃO VERIFICADO. |
 | Relatórios | AUSENTE | Página `front-login/src/pages/Relatorios.jsx:1`; `front-login/src/services/relatoriosService.js:12`; grupos reais em `src/routes/index.js:15` | Não no uso real. Página demonstrativa usa dados simulados, fica fora do menu e chama rotas inexistentes no modo real. |
 
-Resultado: 11 PRONTO, 2 PARCIAL e 1 AUSENTE. Todas as páginas e serviços em `front-login/src/pages/` e `front-login/src/services/`, `front-login/src/App.jsx`, README, `docs/demo.md` e `docs/contrato-api.md` foram inspecionados. Nenhuma mudança de implementação nesta preparação.
+O grupo identificou 11 funcionalidades PRONTO, 2 PARCIAL e 1 AUSENTE. Para esse levantamento, inspecionou todas as páginas e serviços em `front-login/src/pages/` e `front-login/src/services/`, além de `front-login/src/App.jsx`, README, `docs/demo.md` e `docs/contrato-api.md`. A preparação não incluiu mudanças na implementação.
 
 ## Estado inicial do Git
 
-`git branch --show-current`: `chore/congelamento`. Branch solicitada para o kit: `docs/validacao`, criada a partir desse estado, sem atualizar a origem remota.
+Antes de preparar os documentos, o grupo verificou a branch com `git branch --show-current`, que retornou `chore/congelamento`. Em seguida, criou `docs/validacao` a partir desse estado, sem atualizar a origem remota.
 
-`git status --short` antes de criar arquivos:
+O grupo também consultou `git status --short` e identificou as seguintes alterações anteriores à preparação dos arquivos:
 
 ```text
  M .dockerignore
  M docs/2026-10-26.md
 ```
 
-Essas duas alterações anteriores ficam preservadas e fora dos commits do kit.
+Durante a preparação do kit em 16/11, o grupo preservou essas duas alterações e as manteve fora dos commits correspondentes.
 
-`git log --oneline -10` inicial:
+Na sequência, o grupo consultou os dez commits mais recentes com `git log --oneline -10`:
 
 ```text
 456606b docs: roteiro e checklist da demonstração
@@ -66,23 +66,23 @@ ed02d54 fix: correções mínimas de front e dashboard
 | Comando / verificação | Resultado observado |
 |---|---|
 | `curl --silent --show-error --max-time 5 http://localhost:3000/api/health` | Código 7: `Failed to connect to localhost port 3000 after 0 ms: Could not connect to server`. |
-| API e banco por consulta de saúde | NÃO VERIFICADO: a conexão local falhou; o banco não pôde ser avaliado pela consulta. Não foram iniciados serviços nem alterado o ambiente para contornar. |
+| API e banco por consulta de saúde | NÃO VERIFICADO: a conexão local falhou, e o banco não pôde ser avaliado pela consulta. O grupo não iniciou serviços nem alterou o ambiente para contornar a restrição durante a auditoria. |
 | `npm run check` antes do kit | `Sintaxe OK em 44 arquivos.` |
-| `npm run smoke` | NÃO VERIFICADO: não executado porque a API local está inacessível, conforme a consulta acima. |
+| `npm run smoke` | NÃO VERIFICADO: o grupo não executou o teste porque a API local estava inacessível naquela etapa, conforme a consulta acima. |
 | `cd front-login && npm run build` | Aprovado: 62 módulos transformados, `built in 662ms`. |
-| Ensaio de tarefas no navegador e abertura do WhatsApp | NÃO VERIFICADO: sessão interativa não executada. Conferir antes do encontro. |
+| Ensaio de tarefas no navegador e abertura do WhatsApp | NÃO VERIFICADO: sessão interativa não executada na auditoria. O grupo deverá realizar o ensaio antes do encontro. |
 
-Sintaxe e build foram executados localmente porque independem de banco e rede; não substituem o smoke. Não houve instalação, migration, reset, seed, envio ao remoto, merge ou tag.
+Após o levantamento, o grupo executou localmente as verificações de sintaxe e build, pois elas independem de banco e rede. Registrou que esses resultados não substituem o smoke integrado, cuja execução ficou pendente devido à indisponibilidade da API naquela etapa. Durante a preparação do kit, não realizou instalação, migration, reset, seed, envio ao remoto, merge ou tag.
 
 ## Decisões de escopo
 
-Cinco tarefas: localizar projeto, editar projeto, registrar diário com fotos, criar orçamento e preparar mensagem. Login será feito previamente pela equipe com conta de demonstração. Cadastros de conta/cliente e criação de projeto ficam fora apenas pelo limite de tempo e para não solicitar dados pessoais. Abertura no WhatsApp pode expor a conta de quem abrir: na sessão, essa etapa usa exclusivamente o equipamento e a conta de demonstração da equipe; nunca a conta do participante e nunca envio a contato real. Se isso não estiver preparado, interromper a etapa e registrar a limitação, sem atribuir conclusão ao participante.
+Com base no levantamento, o grupo selecionou cinco tarefas: localizar projeto, editar projeto, registrar diário com fotos, criar orçamento e preparar mensagem. Definiu que o login será realizado previamente pela equipe com conta de demonstração. Os cadastros de conta/cliente e a criação de projeto ficaram fora da sessão pelo limite de tempo e para evitar a solicitação de dados pessoais. Para a etapa do WhatsApp, o grupo estabeleceu o uso exclusivo de equipamento e conta de demonstração da equipe, sem conta do participante nem envio a contato real. Se essa condição não estiver preparada, a equipe deverá interromper a etapa e registrar a limitação, sem atribuir conclusão ao participante.
 
-O roteiro é avaliado pelo código, não por resultados da apresentação de 15/11, que são desconhecidos. Não se deve tratar avaliação por vídeo como teste prático. O plano remoto identifica essa diferença.
+O grupo baseou o roteiro no código disponível e manteve sem preenchimento os resultados da apresentação de 15/11, que não constavam dos registros consultados. Também diferenciou a opinião sobre um vídeo da execução de um teste prático, mantendo essa distinção no plano remoto.
 
-## Critérios de aceite do kit
+## Conferências realizadas pelo grupo
 
-Conferência programática dos documentos: `3 + 3 + 4 + 4 + 4 + 4 + 5 + 3 = 30 minutos`. São cinco tarefas com limite individual de até quatro minutos. O questionário contém exatamente 3 perguntas de perfil, 8 afirmações de escala, 1 recomendação de 0–10 e 4 abertas. Consentimento com 6 linhas; alternativa remota com 10 linhas. Os quatro blocos de resultados da retrospectiva permanecem sem fatos preenchidos; apenas 12 limitações com fontes foram incluídas.
+Após elaborar os materiais, o grupo conferiu programaticamente a distribuição de tempo: `3 + 3 + 4 + 4 + 4 + 4 + 5 + 3 = 30 minutos`, com cinco tarefas de até quatro minutos cada. Em seguida, confirmou a estrutura do questionário: 3 perguntas de perfil, 8 afirmações de escala, 1 recomendação de 0–10 e 4 abertas. Verificou também o consentimento com 6 linhas e a alternativa remota com 10 linhas. Na retrospectiva, manteve os quatro blocos de resultados sem fatos preenchidos e incluiu somente 12 limitações com fontes.
 
 | Tarefa | Linha PRONTO na auditoria | Tela | Evidência |
 |---|---|---|---|
@@ -94,9 +94,9 @@ Conferência programática dos documentos: `3 + 3 + 4 + 4 + 4 + 4 + 5 + 3 = 30 m
 | T4 | Criar orçamento | Novo Orçamento | `front-login/src/pages/Orcamentos.jsx:760` |
 | T5 | Enviar orçamento ao cliente (link do WhatsApp) | Enviar ao cliente / Copiar mensagem | `front-login/src/pages/Orcamentos.jsx:719`, `:729` |
 
-O vínculo de cada tarefa com uma linha PRONTO e a existência das linhas de código foram conferidos por programa. Revisão de privacidade: buscas textuais sem ocorrências de pedidos de identificação nem credenciais literais nos arquivos novos; menções a coleta de contato no questionário são instruções para desativá-la. Campos de título se referem a exemplos fictícios. Nenhum dado de configuração local foi copiado.
+O grupo conferiu por programa o vínculo de cada tarefa com uma linha PRONTO e a existência das referências de código. Na revisão de privacidade, realizou buscas textuais sem encontrar pedidos de identificação ou credenciais literais nos arquivos novos. As menções à coleta de contato no questionário orientam sua desativação, e os campos de título utilizam exemplos fictícios. O grupo não copiou dados da configuração local para os documentos.
 
-Parte D executada após a auditoria e a aprovação das conferências de B/C; a indisponibilidade do servidor permaneceu registrada como NÃO VERIFICADO, sem contorno. Resultados:
+Depois de conferir o levantamento, o roteiro, o questionário e o modelo de retrospectiva, o grupo implementou o resumo local dos resultados. A indisponibilidade do servidor permaneceu registrada como NÃO VERIFICADO, sem tentativa de contorno nessa etapa. O grupo obteve os seguintes resultados nas verificações do resumo:
 
 - `node --check scripts/validacao-resumo.js`: código de saída 0.
 - `npm run check` após adicionar o script: `Sintaxe OK em 45 arquivos.`
@@ -105,4 +105,4 @@ Parte D executada após a auditoria e a aprovação das conferências de B/C; a 
 - 23 cenários de leitura, cálculo e erros aprovados, executados por verificação temporária: vírgula/ponto e vírgula, BOM/CRLF, aspas duplicadas, célula com quebra de linha, escala pela ordem, colunas reordenadas, ausência de horário, somente cabeçalho, linha vazia, notas inválidas, numeração parcial/repetida, formato incorreto, arquivo ausente, argumentos ausentes, campos de observação inválidos. Erros retornam código 1 sem imprimir um resumo parcial. Os arquivos temporários foram removidos automaticamente.
 - O script usa apenas Node nativo e não grava arquivos. O campo de comandos do `package.json` ganhou somente `validacao:resumo`; dependências e demais configurações foram preservadas. A seção nova do README tem cinco linhas, incluindo título e linhas vazias.
 
-O único documento adicional aos cinco modelos da Parte B é esta auditoria, criada dentro da pasta autorizada para guardar a tabela e as verificações; a Parte D inclui também `resultados.md` com as instruções do comando. Não houve ampliação dos caminhos autorizados nem mudança das funcionalidades do sistema.
+Por fim, o grupo reuniu os cinco materiais da sessão, este levantamento, o modelo de retrospectiva e as orientações de `resultados.md` em `docs/validacao/`. Manteve as alterações nos caminhos definidos para a preparação, sem modificar as funcionalidades do sistema.

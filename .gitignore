@@ -51,3 +51,6 @@ coverage/
 /uploads/
 
 docs/evidencias/*.png
+
+docs/validacao/backups/
+*.sql
