@@ -1,16 +1,16 @@
 # Sessão com engenheiro(a) — 18/11/2026
 
-Objetivo: observar se o sistema ajuda a consultar uma obra, registrar uma visita e preparar um orçamento. Duração máxima: 30 minutos. Participação anônima; não preencher identificação. Não usar dados reais do participante, de clientes ou de obras. Nas anotações, retirar qualquer informação que possa identificar alguém, inclusive em frases ditas.
+O grupo elaborou este roteiro para observar se o sistema auxilia na consulta de uma obra, no registro de uma visita e na preparação de um orçamento. Definiu duração máxima de 30 minutos e participação anônima, com exemplos fictícios. A sessão está prevista para 18/11/2026; este documento não apresenta resultados de sua execução. Durante a atividade, a equipe deverá excluir das anotações qualquer informação que identifique o participante, clientes ou obras, inclusive nas frases registradas.
 
 ## Preparação pela equipe, antes do encontro
 
-Conferir os fluxos prontos da [auditoria da equipe](auditoria.md) e ensaiá-los no computador da sessão. Se algum não funcionar, não improvisar recurso nem declarar sucesso: adiar o teste prático ou usar a [alternativa remota](plano-b-remoto.md), identificando-a como opinião sobre vídeo.
+Antes do encontro, o grupo deverá conferir os fluxos prontos da [auditoria da equipe](auditoria.md) e ensaiá-los no computador da sessão. Se algum fluxo não funcionar, deverá adiar o teste prático ou utilizar a [alternativa remota](plano-b-remoto.md), identificando-a como opinião sobre vídeo, sem improvisar funcionalidades nem declarar sucesso.
 
-Deixar aberta a tela Projetos em uma conta de demonstração da equipe, sem pedir cadastro ao participante. Preparar a obra fictícia `Obra Ipê — teste`, com cliente fictício e situação `Em Planejamento`. Preparar também um diário e um orçamento fictícios dessa obra para continuar se uma tarefa anterior não for concluída. A equipe prepara tudo pela tela, antes do encontro.
+Em seguida, o grupo deverá deixar aberta a tela Projetos em uma conta de demonstração da equipe, sem solicitar cadastro ao participante. Deverá preparar pela tela a obra fictícia `Obra Ipê — teste`, com cliente fictício e situação `Em Planejamento`, além de um diário e um orçamento fictícios para permitir a continuidade caso uma tarefa anterior não seja concluída.
 
-Separar duas imagens de amostra JPG/JPEG/PNG menores que 10 MB, sem pessoas, placas, logotipos, endereços ou metadados de identificação; usar arquivos de demonstração preparados pela equipe. Não pedir fotografias pessoais. Disponibilizar formulário anônimo já conferido conforme o questionário.
+Na sequência, o grupo deverá separar duas imagens de amostra JPG/JPEG/PNG menores que 10 MB, sem pessoas, placas, logotipos, endereços ou metadados de identificação. Utilizará somente arquivos de demonstração preparados pela equipe, sem solicitar fotografias pessoais. Também deverá disponibilizar o formulário anônimo, após conferir sua configuração conforme o questionário.
 
-Para a tarefa 5, preparar equipamento e conta de demonstração da equipe para abrir o WhatsApp com o cliente fictício, sem concluir envio. Não usar conta pessoal do participante, não apontar a câmera para ele e não gravar voz, imagem ou tela durante o encontro. Se o participante compartilhar espontaneamente informação pessoal, não transcrevê-la.
+Para a tarefa 5, o grupo deverá preparar equipamento e conta de demonstração da equipe para abrir o WhatsApp com o cliente fictício, sem concluir o envio. A atividade não utilizará a conta pessoal do participante nem gravações de voz, imagem ou tela. Se o participante compartilhar espontaneamente alguma informação pessoal, a equipe não deverá transcrevê-la.
 
 ## Distribuição do tempo
 
@@ -25,17 +25,17 @@ Para a tarefa 5, preparar equipamento e conta de demonstração da equipe para a
 | Questionário | 22:00–27:00 | 5 |
 | Conversa final | 27:00–30:00 | 3 |
 
-Total: 30 minutos, incluindo as transições. Cada tarefa termina no próprio limite; não estender o encontro para compensar atrasos. Interromper a qualquer momento se o participante desejar.
+O grupo distribuiu os blocos em 30 minutos, incluindo as transições. Cada tarefa deverá terminar no próprio limite, sem prolongamento do encontro para compensar atrasos. A atividade deverá ser interrompida a qualquer momento se o participante desejar.
 
 ## Abertura — 3 minutos
 
-Ler o [consentimento](consentimento.md). Só continuar se houver concordância oral; não registrar assinatura ou identificação. Dizer: “Engenheiro(a), estamos avaliando as telas, e não o seu desempenho. Use apenas os exemplos fornecidos. Se puder, diga o que está tentando fazer; pode pular qualquer pergunta ou encerrar.” Não apresentar os caminhos dos botões antes das tarefas.
+Na abertura, um integrante do grupo deverá ler o [consentimento](consentimento.md) e prosseguir somente após a concordância oral, sem recolher assinatura ou identificação. A explicação prevista é: “Engenheiro(a), estamos avaliando as telas, e não o seu desempenho. Use apenas os exemplos fornecidos. Se puder, diga o que está tentando fazer; pode pular qualquer pergunta ou encerrar.” Os caminhos dos botões deverão permanecer restritos ao observador antes das tarefas.
 
 ## Regra do observador
 
-Não ajudar nem corrigir. Ler somente o cenário de cada tarefa; o caminho esperado abaixo é exclusivo do observador. Iniciar o cronômetro ao terminar a leitura. Se travar por 1 minuto, perguntar exatamente: “o que você esperava que acontecesse?” e anotar a resposta sem dados pessoais, sem dar pistas. Essa pergunta neutra não conta como ajuda.
+O grupo definiu que o observador não deverá ajudar nem corrigir o participante. Ele deverá ler somente o cenário de cada tarefa e iniciar o cronômetro ao concluir a leitura; o caminho esperado abaixo ficará restrito à observação. Se o participante ficar sem avançar por 1 minuto, o observador deverá perguntar exatamente: “o que você esperava que acontecesse?” e registrar a resposta sem dados pessoais ou pistas sobre a solução. Essa pergunta neutra não será considerada ajuda.
 
-No limite, anotar o tempo observado e encerrar a tarefa como não concluída. Se houver orientação que revele o caminho, marcar “com ajuda”; a conclusão independente deixa de existir. Ajustes entre tarefas são feitos pela equipe, fora da avaliação da tarefa encerrada e dentro do tempo do bloco seguinte, sem ensinar o caminho da próxima. Para tarefa interrompida, usar o exemplo previamente preparado; não atribuir esse trabalho ao participante. Separar falha do sistema de dificuldade de uso e não inventar tempo de sucesso.
+Ao atingir o limite, o observador deverá registrar o tempo e encerrar como não concluída a tarefa cujo critério de sucesso não tenha sido atendido. Qualquer orientação que revele o caminho exigirá a classificação “com ajuda”. Os ajustes entre tarefas serão realizados pela equipe, fora da avaliação da tarefa encerrada e dentro do tempo do bloco seguinte, sem ensinar a próxima solução. Em caso de interrupção, a equipe utilizará o exemplo previamente preparado, sem atribuir esse trabalho ao participante. O registro deverá distinguir falha do sistema e dificuldade de uso, sem presumir tempo de sucesso.
 
 ## T1 — Localizar a obra
 
@@ -79,15 +79,15 @@ No limite, anotar o tempo observado e encerrar a tarefa como não concluída. Se
 
 ## Questionário — 5 minutos
 
-Abrir o [questionário anônimo](questionario.md). O participante responde sem interferência; pode deixar respostas vazias. Não pedir justificativa de uma nota durante o preenchimento. Se uma etapa não pôde ser experimentada, deixar a afirmação correspondente em branco. O observador não vê contas pessoais e não recolhe identificação.
+Após as tarefas, o grupo deverá disponibilizar o [questionário anônimo](questionario.md). O participante responderá sem interferência e poderá deixar respostas vazias. O observador não deverá solicitar justificativas durante o preenchimento, acessar contas pessoais ou recolher identificação. Para etapas não experimentadas, a orientação será deixar a afirmação correspondente em branco.
 
 ## Conversa final — 3 minutos
 
-Perguntar: “Qual mudança ajudaria mais no seu dia a dia?” e “Há algo que gostaria de acrescentar?”. Registrar apenas observações sem identificação. Agradecer o tempo, lembrar que não há compromisso de uso e encerrar até o minuto 30.
+Na conversa final, o grupo deverá perguntar: “Qual mudança ajudaria mais no seu dia a dia?” e “Há algo que gostaria de acrescentar?”. Em seguida, registrará somente observações sem identificação, agradecerá o tempo e lembrará que não há compromisso de uso. O encerramento deverá ocorrer até o minuto 30.
 
 ## Ficha de observação — em branco
 
-Preencher somente com informações das tarefas. Em caso de desistência, não insistir e registrar apenas o que puder ser usado conforme a concordância do participante.
+O observador deverá preencher a ficha somente com informações das tarefas. Em caso de desistência, o grupo encerrará a atividade sem insistência e registrará apenas as informações cujo uso tenha sido autorizado pelo participante.
 
 | Tarefa | Concluiu (sim / com ajuda / não) | Tempo (min) | Erros e dúvidas | Frase dita |
 |---|---|---|---|---|

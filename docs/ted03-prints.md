@@ -1,18 +1,18 @@
 # Capturas da TED 03 — Figuras 10 a 14
 
-As imagens ficam somente no PDF final: salve-as em `docs/evidencias/`, sem adicioná-las ao Git. Os arquivos PNG dessa pasta são ignorados; `.gitkeep` mantém a pasta no repositório. Este roteiro não tira capturas automaticamente.
+O grupo organizou o procedimento de captura das Figuras 10 a 14 para compor o PDF final da TED 03. Definiu `docs/evidencias/` como local de armazenamento das imagens, sem incluí-las no Git. Os arquivos PNG dessa pasta são ignorados, enquanto `.gitkeep` mantém a estrutura no repositório. O procedimento abaixo orienta as capturas manuais; sua documentação não comprova que as imagens já foram produzidas.
 
 ## Pré-requisitos
 
 - Node.js 22 ou superior e dependências do projeto já instaladas.
 - Banco disponível, migrations já aplicadas e contas/projetos de João e Maria já preparados pelo seed de desenvolvimento. Os scripts de prints não executam Docker, migrations, reset ou seed.
 - API em `http://localhost:3000`, iniciada com `npm run dev` na raiz; front em `http://localhost:5173`, iniciado com `npm run dev` dentro de `front-login/`, em outro terminal.
-- `front-login/.env.local` com `VITE_USE_MOCK=false` e `VITE_API_URL=http://localhost:3000`. Preserve arquivos existentes e reinicie o Vite após ajustes. Se usar outra API, alinhe `VITE_API_URL`, `SMOKE_BASE_URL` e `baseUrl` do ambiente Postman.
-- Postman com `docs/postman/local.postman_environment.json` importado e selecionado. Preserve os campos de conta de demonstração desse ambiente; não exporte tokens preenchidos para o Git.
+- `front-login/.env.local` com `VITE_USE_MOCK=false` e `VITE_API_URL=http://localhost:3000`. O grupo deverá preservar os arquivos existentes e reiniciar o Vite após ajustes. Caso utilize outra API, deverá alinhar `VITE_API_URL`, `SMOKE_BASE_URL` e `baseUrl` do ambiente Postman.
+- Postman com `docs/postman/local.postman_environment.json` importado e selecionado. O grupo deverá preservar os campos da conta de demonstração e manter os tokens preenchidos fora do Git.
 
 ## Reset limpo opcional — APAGA todos os dados de desenvolvimento
 
-Use apenas se a lista de projetos estiver poluída por testes e você puder perder os dados locais. Pare a API e o front do host antes. A remoção dos volumes abaixo é destrutiva; não é executada pelos scripts de prints.
+O grupo previu o reset somente para ambientes de desenvolvimento com dados de teste que possam ser descartados. Antes desse procedimento, deverá encerrar a API e o front executados no host. A remoção dos volumes abaixo é destrutiva e não é executada pelos scripts de preparação das capturas. Este documento não registra a execução de um reset.
 
 ```bash
 docker compose down -v
@@ -21,15 +21,15 @@ npm run db:migrate
 npm run db:seed
 ```
 
-`docker compose up -d` também inicia a API no container. Para voltar ao fluxo com API no host, execute `docker compose stop api` antes de `npm run dev`, liberando a porta 3000. Inicie novamente o front em outro terminal.
+O comando `docker compose up -d` também inicia a API no container. Para utilizar novamente a API no host, o grupo deverá executar `docker compose stop api` antes de `npm run dev`, liberando a porta 3000. Em seguida, deverá iniciar o front em outro terminal.
 
 ## Ordem obrigatória das capturas
 
-1. Na raiz, execute `npm run prints:preparar`. Ele lê `SENHA_PADRAO` do arquivo do seed sem executá-lo e usa somente a API para preparar cliente, projeto, duas versões do PDF e diário. Pode ser repetido sequencialmente: dados já encontrados são preservados. Se houver nomes/versões inconsistentes, ele para sem apagar registros nem enviar versões extras.
-2. Execute `npm run prints:check`. Resolva todas as linhas FALHA e confira as linhas ATENÇÃO. A verificação apenas consulta dados e autentica as duas contas. A contagem de testes considera projetos de João/Maria e clientes globais com `smoke`/`teste` no nome; mais de 10 registros somados gera orientação para o reset opcional.
-3. No navegador, entre como João e capture as Figuras **10 e 11**, antes de rodar a coleção completa. No dashboard, eficiência nula e progresso vazio correspondem ao backend atual; não ative mocks para preencher esses campos.
-4. Importe `docs/postman/evidencias-ted03.postman_collection.json`, selecione o mesmo ambiente local e execute manualmente as duas pastas em ordem, clicando em **Send** em cada requisição. Capture a Figura **13** na listagem dos arquivos e a Figura **14** nas respostas 404 e 401. O login de João da primeira pasta precisa ocorrer antes da segunda pasta; não capture os logins.
-5. Capture a Figura **12 por último**: execute `npm run postman:run` na raiz ou rode `crm-engenharia.postman_collection.json` no Collection Runner. A coleção completa cria dados de teste e pode poluir as telas; não rode antes das capturas anteriores. No Postman, configure o working directory como `docs/postman`. O atalho do terminal usa `npx`, que pode baixar Newman na primeira execução, sem adicioná-lo às dependências do projeto.
+1. Primeiro, o grupo deverá executar `npm run prints:preparar` na raiz. O script lê `SENHA_PADRAO` do arquivo do seed sem executá-lo e usa somente a API para preparar cliente, projeto, duas versões do PDF e diário. A execução sequencial preserva os dados já encontrados. Se houver nomes ou versões inconsistentes, o script interrompe o procedimento sem apagar registros nem enviar versões extras.
+2. Em seguida, o grupo deverá executar `npm run prints:check`, investigar todas as linhas FALHA e conferir as linhas ATENÇÃO. A verificação apenas consulta dados e autentica as duas contas. A contagem considera projetos de João/Maria e clientes globais com `smoke`/`teste` no nome; mais de 10 registros somados gera orientação para o reset opcional.
+3. Após a conferência, o grupo deverá entrar como João no navegador e capturar as Figuras **10 e 11**, antes de executar a coleção completa. No dashboard, eficiência nula e progresso vazio correspondem ao backend disponível; o procedimento mantém os dados reais, sem preencher esses campos com simulações.
+4. Na sequência, o grupo deverá importar `docs/postman/evidencias-ted03.postman_collection.json`, selecionar o mesmo ambiente local e executar manualmente as duas pastas em ordem, pelo botão **Send**. A Figura **13** deverá mostrar a listagem dos arquivos, e a Figura **14**, as respostas 404 e 401. O login de João da primeira pasta precisa ocorrer antes da segunda pasta, mas as respostas de login não devem aparecer nas capturas.
+5. Por último, o grupo deverá capturar a Figura **12**, executando `npm run postman:run` na raiz ou `crm-engenharia.postman_collection.json` no Collection Runner. Como a coleção completa cria dados de teste, essa etapa ficará depois das capturas das telas. No Postman, o working directory deverá ser `docs/postman`. O atalho do terminal usa `npx`, que pode baixar Newman na primeira execução, sem adicioná-lo às dependências do projeto.
 
 | Figura | O que mostrar | Onde clicar/rodar | Nome do arquivo |
 | --- | --- | --- | --- |
@@ -41,7 +41,7 @@ npm run db:seed
 
 ## Cuidados e inserção no Word
 
-- Janela de 1366×768 ou maior, zoom 100% e barra de favoritos oculta. Deixe a informação importante legível, sem cortes.
-- Não mostre token, senha, arquivo `.env` ou respostas de login. No Postman, esconda o cabeçalho Authorization e deixe visíveis método, URL, status e corpo das requisições de evidência. Na requisição sem token, mantenha **No Auth**.
-- Se usar o terminal na Figura 12, altere a legenda no Word para **“Coleção executada pelo Newman”**.
-- No Word: **Inserir > Imagem**, escolha o PNG, ajuste a largura para cerca de **14 cm** e apague a caixa amarela correspondente. Na Figura 14, insira a composição com 404 e 401.
+- O grupo deverá utilizar uma janela de 1366×768 ou maior, zoom de 100% e barra de favoritos oculta, mantendo as informações legíveis e sem cortes.
+- As capturas deverão omitir token, senha, arquivo `.env` e respostas de login. No Postman, o grupo deverá ocultar o cabeçalho Authorization e manter visíveis método, URL, status e corpo das requisições de evidência. A requisição sem token deverá permanecer em **No Auth**.
+- Caso utilize o terminal na Figura 12, o grupo deverá adotar a legenda **“Coleção executada pelo Newman”** no Word.
+- No Word, o grupo deverá utilizar **Inserir > Imagem**, selecionar o PNG, ajustar a largura para cerca de **14 cm** e remover a caixa amarela correspondente. A Figura 14 deverá reunir as respostas 404 e 401.

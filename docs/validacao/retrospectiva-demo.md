@@ -1,6 +1,6 @@
 # Retrospectiva da demonstração de 15/11/2026 — modelo para preencher
 
-Este modelo não registra resultados da apresentação. Preencher somente com o que foi observado, sem identificação de participantes ou público. As limitações no final já estavam documentadas; não significam que tenham provocado falhas durante a demonstração.
+O grupo preparou este modelo para registrar a retrospectiva da apresentação. Como os resultados da demonstração não constavam dos registros consultados, manteve as seções de avaliação sem preenchimento. Posteriormente, deverá registrar somente fatos observados, sem identificar participantes ou público. As limitações reunidas ao final já estavam documentadas e não comprovam a ocorrência de falhas durante a apresentação.
 
 ## O que funcionou
 
@@ -23,7 +23,7 @@ Este modelo não registra resultados da apresentação. Preencher somente com o 
 
 ## Limitações já documentadas
 
-As referências abaixo são para a equipe, usando a versão auditada em 16/11/2026. Nenhuma limitação foi acrescentada por suposição.
+Na preparação do modelo, o grupo consultou a versão auditada em 16/11/2026 e reuniu as limitações abaixo com suas respectivas fontes, sem acrescentar ocorrências presumidas da apresentação.
 
 | Limitação existente | Origem no repositório |
 |---|---|

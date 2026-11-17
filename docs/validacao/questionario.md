@@ -4,9 +4,9 @@ Engenheiro(a), queremos entender se estas telas ajudam no trabalho. Não há res
 
 ## Configuração do Google Forms — para a equipe
 
-Desativar a coleta de e-mail, a exigência de login e a opção de limitar a uma resposta, pois ela pode exigir entrada em conta. Não solicitar identificação nem envio de arquivos. Manter todas as perguntas opcionais e as respostas anônimas; não publicar o resumo de respostas. Testar em janela anônima antes de enviar. Vincular as respostas a uma planilha e exportar em CSV quando houver respostas. Não adicionar campos de contato ou identificação. Conferir e retirar informação pessoal inserida espontaneamente antes de usar respostas abertas no trabalho ou no resumo local.
+O grupo definiu que o formulário deverá permanecer sem coleta de e-mail, exigência de login ou limite de uma resposta, pois essa última opção pode exigir entrada em conta. Todas as perguntas serão opcionais e as respostas anônimas, sem solicitação de identificação ou envio de arquivos e sem publicação do resumo de respostas. Antes do envio, a equipe deverá testar o acesso em janela anônima. Posteriormente, poderá vincular as respostas a uma planilha e exportá-las em CSV, sem acrescentar campos de contato. Informações pessoais inseridas espontaneamente deverão ser retiradas antes do uso dos textos no trabalho ou no resumo local.
 
-Copiar os títulos abaixo exatamente. Criar oito perguntas separadas de escala linear, sem embaralhar a ordem; os números 1 a 8 identificam as afirmações no CSV. Os códigos P, R e A identificam os outros grupos. Não criar uma grade que mude o cabeçalho exportado.
+Para manter a compatibilidade com o resumo dos resultados, o grupo deverá reproduzir os títulos abaixo e criar oito perguntas separadas de escala linear, sem embaralhar a ordem ou utilizar uma grade que altere o cabeçalho exportado. Os números 1 a 8 identificam as afirmações no CSV, e os códigos P, R e A identificam os demais grupos de perguntas.
 
 ## Perfil — 3 perguntas
 
@@ -16,7 +16,7 @@ Tipo: múltipla escolha. Opções: Menos de 1 ano; De 1 a 5 anos; De 6 a 10 anos
 
 ### P2. Como controla hoje o diário de obra, principalmente?
 
-Tipo: múltipla escolha. Opções: Papel; Planilha; WhatsApp; Aplicativo; Outro. Usar “Outro” como opção fechada, sem campo adicional.
+Tipo: múltipla escolha. Opções: Papel; Planilha; WhatsApp; Aplicativo; Outro. O grupo definiu “Outro” como opção fechada, sem campo adicional.
 
 ### P3. Usa o celular na obra?
 
@@ -24,7 +24,7 @@ Tipo: múltipla escolha. Opções: Sim; Não.
 
 ## Avaliação — 8 afirmações
 
-Para cada afirmação, usar escala linear de 1 a 5: **1 = discordo totalmente; 2 = discordo; 3 = nem concordo nem discordo; 4 = concordo; 5 = concordo totalmente**. Não preencher valores por quem deixou em branco.
+O grupo adotou uma escala linear de 1 a 5 para cada afirmação: **1 = discordo totalmente; 2 = discordo; 3 = nem concordo nem discordo; 4 = concordo; 5 = concordo totalmente**. As respostas deixadas em branco deverão permanecer sem valor atribuído pela equipe.
 
 ### 1. Consigo usar o sistema sem ajuda.
 
@@ -46,11 +46,11 @@ Para cada afirmação, usar escala linear de 1 a 5: **1 = discordo totalmente; 2
 
 ### R1. De 0 a 10, quanto recomendaria este sistema a um(a) colega?
 
-Tipo: escala linear de 0 a 10. Rótulos: 0 = não recomendaria; 10 = recomendaria com certeza. Não interpretar como avaliação representativa de todos os profissionais.
+Tipo: escala linear de 0 a 10. Rótulos: 0 = não recomendaria; 10 = recomendaria com certeza. O grupo tratará esse resultado como opinião do participante, sem atribuir representatividade a todos os profissionais.
 
 ## Respostas abertas — 4 perguntas
 
-Tipo: parágrafo, resposta opcional. Repetir a orientação: não incluir identificação ou dados de pessoas, clientes ou obras reais.
+Tipo: parágrafo, resposta opcional. O grupo deverá repetir a orientação de não incluir identificação ou dados de pessoas, clientes ou obras reais.
 
 ### A1. O que mais gostou?
 
@@ -62,4 +62,4 @@ Tipo: parágrafo, resposta opcional. Repetir a orientação: não incluir identi
 
 ## Uso na alternativa por vídeo
 
-Manter este formulário para opinião sobre as telas. Pedir que deixe em branco a avaliação do que não experimentou, sobretudo uso sem ajuda e rapidez do registro. A equipe separa esse CSV do teste prático; não mistura resultados nem registra tarefas como concluídas com base apenas no vídeo.
+Na alternativa por vídeo, o grupo utilizará este formulário somente para recolher opiniões sobre as telas e orientará o participante a deixar em branco o que não experimentou, sobretudo uso sem ajuda e rapidez do registro. A equipe manterá esse CSV separado do teste prático, sem misturar resultados ou registrar tarefas como concluídas apenas pela visualização do vídeo.
