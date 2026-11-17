@@ -192,3 +192,5 @@ Atalhos: `npm run prints:preparar`, `npm run prints:check` e `npm run postman:ru
 
 Kit anônimo para a sessão de 18/11/2026: [auditoria, roteiro, questionário e convites](docs/validacao/auditoria.md).
 Resumo local: `npm run validacao:resumo -- <respostas.csv> [observacoes.csv]`; instruções e exemplos fictícios em [docs/validacao/resultados.md](docs/validacao/resultados.md).
+Preparação, snapshot e restauração: [ambiente da validação](docs/validacao/ambiente.md).
+Atalhos do ambiente: `npm run validacao:preparar`, `npm run validacao:fotos` e `npm run validacao:check`.
