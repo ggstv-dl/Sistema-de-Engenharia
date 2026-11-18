@@ -54,3 +54,7 @@ docs/evidencias/*.png
 
 docs/validacao/backups/
 *.sql
+
+docs/validacao/dados/respostas*.csv
+docs/validacao/dados/observacoes*.csv
+!docs/validacao/dados/*-modelo.csv
