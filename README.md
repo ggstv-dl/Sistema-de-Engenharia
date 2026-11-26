@@ -194,3 +194,7 @@ Kit anônimo para a sessão de 18/11/2026: [auditoria, roteiro, questionário e 
 Resumo local: `npm run validacao:resumo -- <respostas.csv> [observacoes.csv]`; instruções e exemplos fictícios em [docs/validacao/resultados.md](docs/validacao/resultados.md).
 Preparação, snapshot e restauração: [ambiente da validação](docs/validacao/ambiente.md).
 Atalhos do ambiente: `npm run validacao:preparar`, `npm run validacao:fotos` e `npm run validacao:check`.
+
+## Vídeo de demonstração
+Roteiro, narração, legendas e checklist: [docs/video/](docs/video/).
+Link do vídeo: [preencher].

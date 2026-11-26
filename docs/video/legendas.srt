@@ -1,0 +1,271 @@
+1
+00:00:00,000 --> 00:00:05,143
+Quem trabalha por conta própria precisa
+acompanhar a obra, guardar registros e
+
+2
+00:00:05,143 --> 00:00:09,000
+preparar orçamentos, muitas vezes entre
+uma visita e outra.
+
+3
+00:00:09,000 --> 00:00:14,143
+O grupo desenvolveu este sistema para
+reunir essas atividades em um lugar.
+
+4
+00:00:14,143 --> 00:00:19,286
+Somos [equipe: nomes] e vamos mostrar um
+exemplo inteiramente fictício, do início
+
+5
+00:00:19,286 --> 00:00:20,486
+ao fim.
+
+6
+00:00:21,086 --> 00:00:24,086
+O acesso começa pela tela de entrada.
+
+7
+00:00:24,086 --> 00:00:27,515
+Com a conta de demonstração, chegamos ao
+painel.
+
+8
+00:00:27,515 --> 00:00:33,086
+Aqui aparecem as obras em andamento, os
+diários registrados e a soma dos
+
+9
+00:00:33,086 --> 00:00:37,372
+orçamentos criados no mês. Esses valores
+vêm dos dados salvos.
+
+10
+00:00:37,372 --> 00:00:43,372
+Os campos de eficiência e progresso ainda
+não têm cálculo disponível, por isso ficam
+
+11
+00:00:43,372 --> 00:00:44,658
+fora desta apresentação.
+
+12
+00:00:45,258 --> 00:00:50,401
+Em Projetos, podemos consultar a lista e
+buscar uma obra pelo nome.
+
+13
+00:00:50,401 --> 00:00:55,115
+Agora vamos criar a Obra Vídeo, um exemplo
+para esta gravação.
+
+14
+00:00:55,115 --> 00:01:00,686
+Informamos o nome e selecionamos o Cliente
+Vídeo, já cadastrado com dados fictícios.
+
+15
+00:01:00,686 --> 00:01:03,686
+Escolhemos a situação Em Andamento e
+salvamos.
+
+16
+00:01:03,686 --> 00:01:07,543
+A obra aparece na lista com o cliente
+associado.
+
+17
+00:01:07,543 --> 00:01:12,686
+Assim, o cadastro organiza a referência
+que será usada nas próximas etapas.
+
+18
+00:01:12,686 --> 00:01:18,686
+Durante a apresentação, vamos manter a
+mesma obra no diário e no orçamento, para
+
+19
+00:01:18,686 --> 00:01:21,257
+acompanhar uma sequência fácil de
+entender.
+
+20
+00:01:21,857 --> 00:01:27,428
+No Diário de Obra, abrimos um novo
+registro e selecionamos a Obra Vídeo.
+
+21
+00:01:27,428 --> 00:01:32,571
+Usamos a data de hoje e escrevemos a
+atividade Conferência da laje.
+
+22
+00:01:32,571 --> 00:01:37,714
+No relato, registramos que a laje foi
+conferida, sem ocorrências no cenário
+
+23
+00:01:37,714 --> 00:01:41,143
+fictício. Em seguida, adicionamos duas
+imagens de amostra.
+
+24
+00:01:41,143 --> 00:01:45,857
+Elas representam a obra e não mostram
+pessoas, placas ou endereços.
+
+25
+00:01:45,857 --> 00:01:51,000
+Antes de salvar, conferimos o projeto, o
+texto e as imagens escolhidas.
+
+26
+00:01:51,000 --> 00:01:56,143
+Ao salvar, o sistema envia os arquivos e
+depois registra o diário.
+
+27
+00:01:56,143 --> 00:01:59,572
+Vamos aguardar a conclusão, sem clicar
+várias vezes.
+
+28
+00:01:59,572 --> 00:02:05,572
+Esse registro reúne o que foi observado na
+visita e mantém as fotos ligadas
+
+29
+00:02:05,572 --> 00:02:06,858
+à mesma obra.
+
+30
+00:02:06,858 --> 00:02:12,858
+A ordem do envio permite que os caminhos
+das imagens façam parte do diário
+
+31
+00:02:12,858 --> 00:02:14,058
+salvo.
+
+32
+00:02:14,658 --> 00:02:19,372
+De volta à lista, encontramos o registro
+que acabamos de criar.
+
+33
+00:02:19,372 --> 00:02:24,943
+Ao abrir Ver detalhes, conferimos a
+atividade, o relato e as duas imagens.
+
+34
+00:02:24,943 --> 00:02:28,372
+Essa consulta mostra o conteúdo que ficou
+salvo.
+
+35
+00:02:28,372 --> 00:02:33,943
+Se uma imagem não carregar, a gravação
+deve parar para conferir a falha.
+
+36
+00:02:34,543 --> 00:02:38,829
+Em Orçamentos, criamos um novo orçamento
+para a mesma obra.
+
+37
+00:02:38,829 --> 00:02:44,829
+O nome será Reparo da laje, com a
+descrição Estrutura e alvenaria e o
+
+38
+00:02:44,829 --> 00:02:49,543
+valor fictício de doze mil e quinhentos
+reais e cinquenta centavos.
+
+39
+00:02:49,543 --> 00:02:55,543
+Depois de salvar, abrimos o item para
+conferir o projeto, a descrição e o
+
+40
+00:02:55,543 --> 00:03:01,543
+total. O botão Copiar mensagem prepara o
+texto que pode ser usado no WhatsApp.
+
+41
+00:03:01,543 --> 00:03:06,257
+Vamos mostrar essa mensagem em um rascunho
+vazio, sem contato pessoal.
+
+42
+00:03:06,257 --> 00:03:10,114
+Ela reúne a obra e o valor do orçamento.
+
+43
+00:03:10,114 --> 00:03:13,971
+O envio depende da confirmação do usuário
+no aplicativo.
+
+44
+00:03:13,971 --> 00:03:18,685
+Nesta gravação, mostramos apenas a
+mensagem pronta e encerramos essa etapa
+
+45
+00:03:18,685 --> 00:03:19,885
+sem enviar.
+
+46
+00:03:20,485 --> 00:03:26,056
+O grupo também organizou um roteiro, um
+questionário e fichas anônimas para apoiar
+
+47
+00:03:26,056 --> 00:03:29,913
+a avaliação com um engenheiro autônomo,
+parceiro do projeto.
+
+48
+00:03:29,913 --> 00:03:32,913
+Os resultados reais ainda precisam ser
+documentados.
+
+49
+00:03:32,913 --> 00:03:37,627
+O registro de congelamento reúne as
+verificações disponíveis e as pendências.
+
+50
+00:03:37,627 --> 00:03:40,627
+Esta apresentação mostra somente os
+recursos implementados.
+
+51
+00:03:41,227 --> 00:03:47,227
+O sistema usa React na interface, Node com
+Express no servidor e PostgreSQL com
+
+52
+00:03:47,227 --> 00:03:49,370
+Prisma para guardar os dados.
+
+53
+00:03:49,370 --> 00:03:54,513
+O projeto ainda não oferece funcionamento
+offline, consulta real ao SINAPI nem
+
+54
+00:03:54,513 --> 00:03:56,227
+geração automática de PDF.
+
+55
+00:03:56,227 --> 00:04:01,798
+Os próximos passos dependem das evidências
+da avaliação e da correção dos defeitos
+
+56
+00:04:01,798 --> 00:04:04,369
+identificados. Obrigado por acompanhar a
+demonstração.
+
