@@ -18,7 +18,8 @@
     "validacao:resumo": "node scripts/validacao-resumo.js",
     "validacao:preparar": "node scripts/validacao-preparar.js",
     "validacao:fotos": "node scripts/validacao-fotos.js",
-    "validacao:check": "node scripts/validacao-check.js"
+    "validacao:check": "node scripts/validacao-check.js",
+    "video:legendas": "node scripts/video-legendas.js"
   },
   "keywords": [],
   "author": "",
