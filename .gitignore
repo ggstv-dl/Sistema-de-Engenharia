@@ -58,3 +58,8 @@ docs/validacao/backups/
 docs/validacao/dados/respostas*.csv
 docs/validacao/dados/observacoes*.csv
 !docs/validacao/dados/*-modelo.csv
+
+docs/video/*.mp4
+docs/video/*.mkv
+docs/video/*.webm
+docs/video/bruto/
